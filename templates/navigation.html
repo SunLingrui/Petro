@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}实时优化系统{% endblock %}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/navigation.css') }}">
+    {% block styles %}{% endblock %}
+</head>
+<body class="{{ body_class|default('system-body') }}">
+    <div class="screen-noise"></div>
+
+    {% if hide_app_nav %}
+    <header class="auth-topbar">
+        <a class="brand-lockup" href="{{ url_for('login') }}">
+            <span class="brand-lockup__mark">GX</span>
+            <span class="brand-lockup__text">
+                <strong>中国石油规划总院 FCC-RTO</strong>
+                <small>催化裂化装置实时优化系统</small>
+            </span>
+        </a>
+        <div class="auth-topbar__links">
+            <a href="{{ url_for('login') }}">登录</a>
+            <a href="{{ url_for('register') }}">注册</a>
+        </div>
+    </header>
+    <main class="auth-stage">
+    {% else %}
+    <div class="system-shell">
+        <header class="system-header">
+            <div class="system-brand">
+                <span class="system-brand__mark">GX</span>
+                <div>
+                    <p class="system-brand__name">中国石油规划总院</p>
+                    <h1>催化裂化装置实时优化系统</h1>
+                </div>
+            </div>
+
+            <div class="system-header__actions">
+                <a class="top-action" href="{{ url_for('main') }}">视图</a>
+                <a class="top-action" href="{{ url_for('parameter_settings') }}">配置</a>
+                <a class="user-token {% if active_page == 'profile' %}is-active{% endif %}" href="{{ url_for('profile') }}">{{ username }}</a>
+                <a class="logout-link" href="{{ url_for('logout') }}">退出</a>
+            </div>
+        </header>
+
+        <div class="workspace">
+            <aside class="system-sidebar">
+                <div class="nav-section">
+                    <p class="nav-section__title">总览</p>
+                    <ul class="nav-tree">
+                        <li class="nav-tree__item">
+                            <a class="nav-link {% if active_page == 'main' %}is-active{% endif %}" href="{{ url_for('main') }}">
+                                <span class="nav-link__marker"></span>
+                                <span>RTO首页</span>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+
+                <div class="nav-section">
+                    <p class="nav-section__title">RTO运行</p>
+                    <ul class="nav-tree">
+                        <li class="nav-tree__item">
+                            <a class="nav-link {% if active_page == 'rto_operation' %}is-active{% endif %}" href="{{ url_for('rto_operation') }}">
+                                <span class="nav-link__marker"></span>
+                                <span>RTO运行</span>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+
+                <div class="nav-section">
+                    <p class="nav-section__title">RTO操作</p>
+                    <ul class="nav-tree">
+                        <li class="nav-tree__item">
+                            <a class="nav-link {% if active_page == 'optimization_target' %}is-active{% endif %}" href="{{ url_for('optimization_target') }}">
+                                <span class="nav-link__marker"></span>
+                                <span>RTO优化目标</span>
+                            </a>
+                        </li>
+                        <li class="nav-tree__item">
+                            <a class="nav-link {% if active_page in ['optimization_variables', 'reactor_temperature', 'catalyst_oil_ratio', 'regenerator_temperature', 'feed_preheat_temperature'] %}is-active{% endif %}" href="{{ url_for('optimization_variables') }}">
+                                <span class="nav-link__marker"></span>
+                                <span>RTO优化变量</span>
+                            </a>
+                            <ul class="nav-subtree {% if active_page in ['optimization_variables', 'reactor_temperature', 'catalyst_oil_ratio', 'regenerator_temperature', 'feed_preheat_temperature'] %}is-open{% endif %}">
+                                <li>
+                                    <a class="nav-sublink {% if active_page == 'reactor_temperature' %}is-active{% endif %}" href="{{ url_for('reactor_temperature') }}">
+                                        <span class="nav-sublink__marker"></span>
+                                        <span>反应温度</span>
+                                    </a>
+                                </li>
+                                <li>
+                                    <a class="nav-sublink {% if active_page == 'catalyst_oil_ratio' %}is-active{% endif %}" href="{{ url_for('catalyst_oil_ratio') }}">
+                                        <span class="nav-sublink__marker"></span>
+                                        <span>剂油比</span>
+                                    </a>
+                                </li>
+                                <li>
+                                    <a class="nav-sublink {% if active_page == 'regenerator_temperature' %}is-active{% endif %}" href="{{ url_for('regenerator_temperature') }}">
+                                        <span class="nav-sublink__marker"></span>
+                                        <span>再生温度</span>
+                                    </a>
+                                </li>
+                                <li>
+                                    <a class="nav-sublink {% if active_page == 'feed_preheat_temperature' %}is-active{% endif %}" href="{{ url_for('feed_preheat_temperature') }}">
+                                        <span class="nav-sublink__marker"></span>
+                                        <span>原料预热温度</span>
+                                    </a>
+                                </li>
+                            </ul>
+                        </li>
+                    </ul>
+                </div>
+
+                <div class="nav-section">
+                    <p class="nav-section__title">价格与化验分析</p>
+                    <ul class="nav-tree">
+                        <li class="nav-tree__item">
+                            <a class="nav-link {% if active_page in ['price_lab_overview', 'raw_product_prices', 'utilities_prices', 'lab_analysis', 'cost_prices'] %}is-active{% endif %}" href="{{ url_for('price_lab_overview') }}">
+                                <span class="nav-link__marker"></span>
+                                <span>价格与化验分析总览</span>
+                            </a>
+                            <ul class="nav-subtree {% if active_page in ['price_lab_overview', 'raw_product_prices', 'utilities_prices', 'lab_analysis', 'cost_prices'] %}is-open{% endif %}">
+                                <li>
+                                    <a class="nav-sublink {% if active_page == 'raw_product_prices' %}is-active{% endif %}" href="{{ url_for('raw_product_prices') }}">
+                                        <span class="nav-sublink__marker"></span>
+                                        <span>原料和产品价格</span>
+                                    </a>
+                                </li>
+                                <li>
+                                    <a class="nav-sublink {% if active_page == 'utilities_prices' %}is-active{% endif %}" href="{{ url_for('utilities_prices') }}">
+                                        <span class="nav-sublink__marker"></span>
+                                        <span>公用工程价格</span>
+                                    </a>
+                                </li>
+                                <li>
+                                    <a class="nav-sublink {% if active_page == 'lab_analysis' %}is-active{% endif %}" href="{{ url_for('lab_analysis') }}">
+                                        <span class="nav-sublink__marker"></span>
+                                        <span>化验分析数据</span>
+                                    </a>
+                                </li>
+                                <li>
+                                    <a class="nav-sublink {% if active_page == 'cost_prices' %}is-active{% endif %}" href="{{ url_for('cost_prices') }}">
+                                        <span class="nav-sublink__marker"></span>
+                                        <span>成本价格</span>
+                                    </a>
+                                </li>
+                            </ul>
+                        </li>
+                    </ul>
+                </div>
+
+                <div class="nav-section">
+                    <p class="nav-section__title">系统设置</p>
+                    <ul class="nav-tree">
+                        <li class="nav-tree__item">
+                            <a class="nav-link {% if active_page == 'parameter_settings' %}is-active{% endif %}" href="{{ url_for('parameter_settings') }}">
+                                <span class="nav-link__marker"></span>
+                                <span>参数配置</span>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </aside>
+
+            <main class="system-content">
+    {% endif %}
+                {% block content %}{% endblock %}
+    {% if hide_app_nav %}
+    </main>
+    {% else %}
+            </main>
+        </div>
+    </div>
+    {% endif %}
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+        <div id="flash-container" class="flash-stack">
+            {% for category, message in messages %}
+            <div class="flash-message {{ category }}">{{ message }}</div>
+            {% endfor %}
+        </div>
+        {% endif %}
+    {% endwith %}
+
+    <script>
+        setTimeout(function () {
+            const flashContainer = document.getElementById('flash-container');
+            if (flashContainer) {
+                flashContainer.style.opacity = '0';
+                setTimeout(function () {
+                    flashContainer.remove();
+                }, 300);
+            }
+        }, 2600);
+    </script>
+    {% block scripts %}{% endblock %}
+</body>
+</html>

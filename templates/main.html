@@ -1,0 +1,110 @@
+{% extends "navigation.html" %}
+
+{% block title %}{{ page_title }}{% endblock %}
+
+{% block content %}
+<section class="panel main-status-board">
+    <div class="main-status-board__header">
+        <div>
+            <p class="section-tag">RTO HOME</p>
+            <h2>RTO首页</h2>
+        </div>
+    </div>
+
+    <div class="status-grid">
+        <article class="status-item">
+            <p class="status-label">RTO今日运行次数</p>
+            <strong class="status-value">{{ main_data.today_runs }}</strong>
+        </article>
+        <article class="status-item">
+            <p class="status-label">RTO昨日运行次数</p>
+            <strong class="status-value">{{ main_data.yesterday_runs }}</strong>
+        </article>
+        <article class="status-item">
+            <p class="status-label">RTO本月运行次数</p>
+            <strong class="status-value">{{ main_data.month_runs }}</strong>
+        </article>
+        <article class="status-item">
+            <p class="status-label">RTO累计运行次数</p>
+            <strong class="status-value">{{ main_data.total_runs }}</strong>
+        </article>
+
+        <article class="status-item">
+            <p class="status-label">最新优化计算时刻</p>
+            <strong class="status-value status-value-dark">{{ main_data.latest_plan_time }}</strong>
+        </article>
+        <article class="status-item">
+            <p class="status-label">距下次优化计算剩余时间</p>
+            <div class="status-inline">
+                <strong class="status-value">{{ main_data.next_plan_remaining }}</strong>
+                <span class="status-unit">分钟</span>
+            </div>
+        </article>
+        <article class="status-item">
+            <p class="status-label">RTO运行天数</p>
+            <strong class="status-value">{{ main_data.runtime_days }}</strong>
+        </article>
+        <article class="status-item">
+            <p class="status-label">RTO投用率</p>
+            <div class="status-inline">
+                <strong class="status-value">{{ main_data.usage_rate }}</strong>
+                <span class="status-unit">%</span>
+            </div>
+        </article>
+
+        <article class="status-item">
+            <p class="status-label">RTO总开关</p>
+            <span class="toggle-pill{% if main_data.master_switch_on %} is-on{% endif %}">
+                <span class="toggle-pill__knob"></span>
+            </span>
+        </article>
+        <article class="status-item">
+            <p class="status-label">装置稳态状态</p>
+            <strong class="status-value {{ main_data.equipment_status_class }}">{{ main_data.equipment_status }}</strong>
+        </article>
+        <article class="status-item">
+            <p class="status-label">RTO运行状态</p>
+            <strong class="status-value {{ main_data.runtime_status_class }}">{{ main_data.runtime_status }}</strong>
+        </article>
+        <article class="status-item">
+            <p class="status-label">RTO与APC联动状态</p>
+            <strong class="status-value {{ main_data.apc_status_class }}">{{ main_data.apc_status }}</strong>
+        </article>
+
+        <article class="status-item">
+            <p class="status-label">RTO程序运行状态</p>
+            <strong class="status-value {{ main_data.program_status_class }}">{{ main_data.program_status }}</strong>
+        </article>
+        <article class="status-item">
+            <p class="status-label">RTO执行投用率</p>
+            <div class="status-inline">
+                <strong class="status-value">{{ main_data.execution_rate }}</strong>
+                <span class="status-unit">%</span>
+            </div>
+        </article>
+        <article class="status-item">
+            <p class="status-label">影子价格效益</p>
+            <strong class="status-value">{{ main_data.price_benefit }}</strong>
+        </article>
+        <article class="status-item">
+            <p class="status-label">成本价格效益</p>
+            <strong class="status-value">{{ main_data.cost_benefit }}</strong>
+        </article>
+    </div>
+</section>
+
+<section class="panel chart-card main-chart-card">
+    <div class="panel-heading">
+        <div>
+            <h3>优化目标曲线图</h3>
+            <p>图表区域先保留为空，后续这里直接接数据库读取的实时优化曲线数据。</p>
+        </div>
+    </div>
+    <div class="chart-placeholder main-chart-placeholder">
+        <div class="chart-placeholder__copy">
+            <strong>优化目标曲线图</strong>
+            <p>图表数据接口预留</p>
+        </div>
+    </div>
+</section>
+{% endblock %}

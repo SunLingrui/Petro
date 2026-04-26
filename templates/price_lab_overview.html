@@ -1,0 +1,160 @@
+{% extends "navigation.html" %}
+
+{% block title %}{{ page_title }}{% endblock %}
+
+{% block content %}
+<section class="panel target-page overview-blue-page">
+    <div class="overview-blue-page__header">
+        <div>
+            <p class="section-tag">PRICE + LAB OVERVIEW</p>
+            <h2>价格与化验分析总览</h2>
+        </div>
+    </div>
+
+    <div class="overview-blue-layout">
+        <section class="overview-blue-card">
+            <h3>原料及产品价格</h3>
+
+            <div class="overview-blue-subgrid">
+                <div class="overview-blue-subcard">
+                    <p class="overview-blue-label">原料名称</p>
+                    <table class="overview-blue-table">
+                        <thead>
+                            <tr>
+                                <th>原料名称</th>
+                                <th>价格数据</th>
+                                <th>单位</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for row in overview_tables.raw_materials %}
+                            <tr>
+                                <td>{{ row.name }}</td>
+                                <td><input class="overview-blue-input" type="text" value="{{ row.value }}"></td>
+                                <td>{{ row.unit }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="overview-blue-subcard">
+                    <p class="overview-blue-label">产品名称</p>
+                    <table class="overview-blue-table">
+                        <thead>
+                            <tr>
+                                <th>产品名称</th>
+                                <th>价格数据</th>
+                                <th>单位</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for row in overview_tables.products %}
+                            <tr>
+                                <td>{{ row.name }}</td>
+                                <td><input class="overview-blue-input" type="text" value="{{ row.value }}"></td>
+                                <td>{{ row.unit }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <section class="overview-blue-card">
+            <h3>公用工程价格</h3>
+            <table class="overview-blue-table">
+                <thead>
+                    <tr>
+                        <th>公用工程名称</th>
+                        <th>价格数据</th>
+                        <th>单位</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for row in overview_tables.utilities %}
+                    <tr>
+                        <td>{{ row.name }}</td>
+                        <td><input class="overview-blue-input" type="text" value="{{ row.value }}"></td>
+                        <td>{{ row.unit }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </section>
+
+        <section class="overview-blue-card">
+                <h3>化验分析数据</h3>
+
+                <div class="overview-blue-subgrid">
+                    <div class="overview-blue-subcard">
+                        <p class="overview-blue-label">原料化验分析</p>
+                        <table class="overview-blue-table">
+                            <thead>
+                                <tr>
+                                    <th>名称</th>
+                                    <th>数据值</th>
+                                    <th>单位</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for row in overview_tables.feed_lab %}
+                                <tr>
+                                    <td>{{ row.name }}</td>
+                                    <td><input class="overview-blue-input" type="text" value="{{ row.value }}"></td>
+                                    <td>{{ row.unit }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="overview-blue-subcard">
+                        <p class="overview-blue-label">产品化验分析</p>
+                        <table class="overview-blue-table">
+                            <thead>
+                                <tr>
+                                    <th>名称</th>
+                                    <th>数据值</th>
+                                    <th>单位</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for row in overview_tables.product_lab %}
+                                <tr>
+                                    <td>{{ row.name }}</td>
+                                    <td><input class="overview-blue-input" type="text" value="{{ row.value }}"></td>
+                                    <td>{{ row.unit }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+        </section>
+
+        <section class="overview-blue-card">
+            <h3>成本价格</h3>
+            <table class="overview-blue-table">
+                <thead>
+                    <tr>
+                        <th>成本项</th>
+                        <th>价格数据</th>
+                        <th>单位</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for row in overview_tables.costs %}
+                    <tr>
+                        <td>{{ row.name }}</td>
+                        <td><input class="overview-blue-input" type="text" value="{{ row.value }}"></td>
+                        <td>{{ row.unit }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </section>
+    </div>
+</section>
+{% endblock %}

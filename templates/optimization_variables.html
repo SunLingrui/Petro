@@ -1,0 +1,240 @@
+{% extends "navigation.html" %}
+
+{% block title %}{{ page_title }}{% endblock %}
+
+{% block styles %}
+{{ super() }}
+<style>
+    .variable-page {
+        min-width: 0;
+    }
+
+    .variable-table-panel {
+        min-width: 0;
+        overflow: hidden;
+    }
+
+    .variable-scroll-toolbar {
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        gap: 10px;
+        margin-bottom: 12px;
+    }
+
+    .variable-scroll-hint {
+        margin-right: auto;
+        color: rgba(191, 219, 254, 0.78);
+        font-size: 0.9rem;
+    }
+
+    .variable-scroll-button {
+        min-width: 40px;
+        height: 40px;
+        border: 1px solid rgba(96, 165, 250, 0.16);
+        border-radius: 12px;
+        background: rgba(255, 255, 255, 0.04);
+        color: #dbeafe;
+        font-size: 1.1rem;
+        cursor: pointer;
+    }
+
+    .variable-scroll-button:hover {
+        background: rgba(59, 130, 246, 0.14);
+    }
+
+    .variable-scroll-frame {
+        display: block;
+        width: 100%;
+        max-width: 100%;
+        min-width: 0;
+        overflow-x: auto;
+        overflow-y: hidden;
+        padding-bottom: 10px;
+        -webkit-overflow-scrolling: touch;
+        overscroll-behavior-x: contain;
+    }
+
+    .variable-scroll-frame::-webkit-scrollbar {
+        height: 12px;
+    }
+
+    .variable-scroll-frame::-webkit-scrollbar-track {
+        border-radius: 999px;
+        background: rgba(148, 163, 184, 0.12);
+    }
+
+    .variable-scroll-frame::-webkit-scrollbar-thumb {
+        border-radius: 999px;
+        background: rgba(96, 165, 250, 0.6);
+    }
+
+    .variable-scroll-frame::-webkit-scrollbar-thumb:hover {
+        background: rgba(96, 165, 250, 0.82);
+    }
+
+    .variable-table-form {
+        display: block;
+        width: 1460px;
+        min-width: 1460px;
+    }
+
+    .variable-table-form .variable-data-table {
+        width: 1460px;
+        min-width: 1460px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<section class="panel target-page variable-page">
+    <div class="target-page__header">
+        <div>
+            <p class="section-tag">RTO VARIABLES</p>
+            <h2>RTO优化变量</h2>
+        </div>
+    </div>
+
+    <div class="panel table-panel target-table-panel variable-table-panel">
+        <div class="panel-heading target-panel-heading">
+            <div>
+                <h3>优化变量信息表</h3>
+            </div>
+        </div>
+
+        <div class="variable-scroll-toolbar">
+            <span class="variable-scroll-hint">表格较宽，可点击左右按钮查看完整字段</span>
+            <button class="variable-scroll-button" id="variable-scroll-left" type="button" aria-label="向左滚动">◀</button>
+            <button class="variable-scroll-button" id="variable-scroll-right" type="button" aria-label="向右滚动">▶</button>
+        </div>
+
+        <div class="variable-scroll-frame" id="variable-scroll-frame">
+            <form class="variable-table-form" action="#" method="post">
+                <table class="data-table variable-data-table">
+                    <thead>
+                        <tr>
+                            <th>优化变量名称</th>
+                            <th>位号</th>
+                            <th>当前值</th>
+                            <th>单位</th>
+                            <th>上轮优化结果值</th>
+                            <th>优化结果值</th>
+                            <th>优化结果值与输出设定值差值</th>
+                            <th>当前步幅</th>
+                            <th>最大步幅</th>
+                            <th>输出设定值</th>
+                            <th>优化结果下达</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>反应温度</td>
+                            <td>{{ variable_form.reactor_temperature.tag }}</td>
+                            <td>{{ variable_form.reactor_temperature.current_value }}</td>
+                            <td>{{ variable_form.reactor_temperature.unit }}</td>
+                            <td>{{ variable_form.reactor_temperature.upper_optimized_value }}</td>
+                            <td>{{ variable_form.reactor_temperature.optimized_value }}</td>
+                            <td>{{ variable_form.reactor_temperature.delta_vs_output }}</td>
+                            <td><input class="table-input table-input--compact" type="text" name="reactor_temperature_current_step" value="{{ variable_form.reactor_temperature.current_step }}"></td>
+                            <td><input class="table-input table-input--compact" type="text" name="reactor_temperature_max_step" value="{{ variable_form.reactor_temperature.max_step }}"></td>
+                            <td><input class="table-input table-input--compact" type="text" name="reactor_temperature_output_setpoint" value="{{ variable_form.reactor_temperature.output_setpoint }}"></td>
+                            <td>
+                                <label class="table-switch">
+                                    <input type="checkbox" name="reactor_temperature_push_enabled" {% if variable_form.reactor_temperature.push_enabled %}checked{% endif %}>
+                                    <span class="table-switch__track"><span class="table-switch__thumb"></span></span>
+                                </label>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>剂油比</td>
+                            <td>{{ variable_form.catalyst_oil_ratio.tag }}</td>
+                            <td>{{ variable_form.catalyst_oil_ratio.current_value }}</td>
+                            <td>{{ variable_form.catalyst_oil_ratio.unit }}</td>
+                            <td>{{ variable_form.catalyst_oil_ratio.upper_optimized_value }}</td>
+                            <td>{{ variable_form.catalyst_oil_ratio.optimized_value }}</td>
+                            <td>{{ variable_form.catalyst_oil_ratio.delta_vs_output }}</td>
+                            <td><input class="table-input table-input--compact" type="text" name="catalyst_oil_ratio_current_step" value="{{ variable_form.catalyst_oil_ratio.current_step }}"></td>
+                            <td><input class="table-input table-input--compact" type="text" name="catalyst_oil_ratio_max_step" value="{{ variable_form.catalyst_oil_ratio.max_step }}"></td>
+                            <td><input class="table-input table-input--compact" type="text" name="catalyst_oil_ratio_output_setpoint" value="{{ variable_form.catalyst_oil_ratio.output_setpoint }}"></td>
+                            <td>
+                                <label class="table-switch">
+                                    <input type="checkbox" name="catalyst_oil_ratio_push_enabled" {% if variable_form.catalyst_oil_ratio.push_enabled %}checked{% endif %}>
+                                    <span class="table-switch__track"><span class="table-switch__thumb"></span></span>
+                                </label>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>再生温度</td>
+                            <td>{{ variable_form.regenerator_temperature.tag }}</td>
+                            <td>{{ variable_form.regenerator_temperature.current_value }}</td>
+                            <td>{{ variable_form.regenerator_temperature.unit }}</td>
+                            <td>{{ variable_form.regenerator_temperature.upper_optimized_value }}</td>
+                            <td>{{ variable_form.regenerator_temperature.optimized_value }}</td>
+                            <td>{{ variable_form.regenerator_temperature.delta_vs_output }}</td>
+                            <td><input class="table-input table-input--compact" type="text" name="regenerator_temperature_current_step" value="{{ variable_form.regenerator_temperature.current_step }}"></td>
+                            <td><input class="table-input table-input--compact" type="text" name="regenerator_temperature_max_step" value="{{ variable_form.regenerator_temperature.max_step }}"></td>
+                            <td><input class="table-input table-input--compact" type="text" name="regenerator_temperature_output_setpoint" value="{{ variable_form.regenerator_temperature.output_setpoint }}"></td>
+                            <td>
+                                <label class="table-switch">
+                                    <input type="checkbox" name="regenerator_temperature_push_enabled" {% if variable_form.regenerator_temperature.push_enabled %}checked{% endif %}>
+                                    <span class="table-switch__track"><span class="table-switch__thumb"></span></span>
+                                </label>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>原料预热温度</td>
+                            <td>{{ variable_form.feed_preheat_temperature.tag }}</td>
+                            <td>{{ variable_form.feed_preheat_temperature.current_value }}</td>
+                            <td>{{ variable_form.feed_preheat_temperature.unit }}</td>
+                            <td>{{ variable_form.feed_preheat_temperature.upper_optimized_value }}</td>
+                            <td>{{ variable_form.feed_preheat_temperature.optimized_value }}</td>
+                            <td>{{ variable_form.feed_preheat_temperature.delta_vs_output }}</td>
+                            <td><input class="table-input table-input--compact" type="text" name="feed_preheat_temperature_current_step" value="{{ variable_form.feed_preheat_temperature.current_step }}"></td>
+                            <td><input class="table-input table-input--compact" type="text" name="feed_preheat_temperature_max_step" value="{{ variable_form.feed_preheat_temperature.max_step }}"></td>
+                            <td><input class="table-input table-input--compact" type="text" name="feed_preheat_temperature_output_setpoint" value="{{ variable_form.feed_preheat_temperature.output_setpoint }}"></td>
+                            <td>
+                                <label class="table-switch">
+                                    <input type="checkbox" name="feed_preheat_temperature_push_enabled" {% if variable_form.feed_preheat_temperature.push_enabled %}checked{% endif %}>
+                                    <span class="table-switch__track"><span class="table-switch__thumb"></span></span>
+                                </label>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </form>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+<script>
+    (function () {
+        const frame = document.getElementById('variable-scroll-frame');
+        const leftButton = document.getElementById('variable-scroll-left');
+        const rightButton = document.getElementById('variable-scroll-right');
+
+        if (!frame || !leftButton || !rightButton) {
+            return;
+        }
+
+        const scrollStep = 360;
+
+        leftButton.addEventListener('click', function () {
+            frame.scrollBy({ left: -scrollStep, behavior: 'smooth' });
+        });
+
+        rightButton.addEventListener('click', function () {
+            frame.scrollBy({ left: scrollStep, behavior: 'smooth' });
+        });
+
+        frame.addEventListener('wheel', function (event) {
+            if (Math.abs(event.deltaY) > Math.abs(event.deltaX)) {
+                event.preventDefault();
+                frame.scrollLeft += event.deltaY;
+            }
+        }, { passive: false });
+    })();
+</script>
+{% endblock %}

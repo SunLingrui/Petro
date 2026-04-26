@@ -1,0 +1,33 @@
+{% extends "navigation.html" %}
+
+{% block title %}{{ page_title }}{% endblock %}
+
+{% block content %}
+<section class="content-header panel">
+    <div>
+        <p class="section-tag">SYSTEM CONFIG</p>
+        <h2>参数配置</h2>
+    </div>
+</section>
+
+
+<section class="parameter-stack">
+    <article class="panel parameter-card">
+        <div class="panel-heading"><h3>反馈调优参数</h3></div>
+        <div class="parameter-grid">
+            <div class="parameter-field"><label>数据窗设置参数 N</label><div>20.0000</div></div>
+            <div class="parameter-field"><label>数据窗设置参数 M</label><div>80.0000</div></div>
+            <div class="parameter-field"><label>权重系数</label><div>0.0020</div></div>
+        </div>
+    </article>
+
+    <article class="panel parameter-card">
+        <div class="panel-heading"><h3>混合模型参数</h3></div>
+        <div class="parameter-grid">
+            <div class="parameter-field"><label>温度变量参数网格间距</label><div>1.0000</div></div>
+            <div class="parameter-field"><label>网格数</label><div>100.0000</div></div>
+            <div class="parameter-field"><label>超时时间 (s)</label><div>60.0000</div></div>
+        </div>
+    </article>
+</section>
+{% endblock %}

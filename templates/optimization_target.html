@@ -1,0 +1,612 @@
+{% extends "navigation.html" %}
+
+{% block title %}{{ page_title }}{% endblock %}
+
+{% block styles %}
+{{ super() }}
+<style>
+    .target-page {
+        min-width: 0;
+    }
+
+    .target-table-panel {
+        min-width: 0;
+        overflow: hidden;
+    }
+
+    .target-scroll-frame {
+        display: block;
+        width: 100%;
+        max-width: 100%;
+        min-width: 0;
+        overflow-x: auto;
+        overflow-y: hidden;
+        padding-bottom: 10px;
+        -webkit-overflow-scrolling: touch;
+        overscroll-behavior-x: contain;
+    }
+
+    .target-scroll-frame::-webkit-scrollbar {
+        height: 12px;
+    }
+
+    .target-scroll-frame::-webkit-scrollbar-track {
+        border-radius: 999px;
+        background: rgba(148, 163, 184, 0.12);
+    }
+
+    .target-scroll-frame::-webkit-scrollbar-thumb {
+        border-radius: 999px;
+        background: rgba(96, 165, 250, 0.6);
+    }
+
+    .target-scroll-frame::-webkit-scrollbar-thumb:hover {
+        background: rgba(96, 165, 250, 0.82);
+    }
+
+    .target-table-form {
+        display: block;
+        width: 1080px;
+        min-width: 1080px;
+    }
+
+    .target-table-form .target-data-table {
+        width: 1080px;
+        min-width: 1080px;
+    }
+
+    .table-input--readonly {
+        background: rgba(148, 163, 184, 0.08);
+        color: #dbeafe;
+        cursor: default;
+    }
+
+    .table-input--readonly:focus {
+        border-color: rgba(96, 165, 250, 0.28);
+        box-shadow: none;
+        outline: none;
+    }
+
+    .target-query-alert {
+        margin: 0 0 14px;
+        padding: 12px 14px;
+        border-radius: 14px;
+        background: rgba(239, 68, 68, 0.12);
+        border: 1px solid rgba(248, 113, 113, 0.26);
+        color: #fecaca;
+        line-height: 1.5;
+    }
+
+    .target-chart-shell {
+        display: grid;
+        gap: 14px;
+    }
+
+    .target-chart-titlebar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+    }
+
+    .target-chart-caption {
+        color: rgba(191, 219, 254, 0.8);
+        font-size: 0.9rem;
+    }
+
+    .target-chart-meta {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 12px;
+    }
+
+    .target-chart-metric {
+        padding: 14px 16px;
+        border-radius: 18px;
+        background: rgba(255, 255, 255, 0.04);
+        border: 1px solid rgba(148, 163, 184, 0.14);
+    }
+
+    .target-chart-metric span {
+        display: block;
+        margin-bottom: 8px;
+        color: #93c5fd;
+        font-size: 0.8rem;
+        letter-spacing: 0.08em;
+    }
+
+    .target-chart-metric strong {
+        display: block;
+        color: #f8fbff;
+        font-size: 1.15rem;
+    }
+
+    .target-plot {
+        position: relative;
+        min-height: 360px;
+        padding: 20px 18px 52px 52px;
+        border-radius: 22px;
+        background: linear-gradient(180deg, rgba(248, 251, 255, 0.98), rgba(236, 243, 250, 0.98));
+        border: 1px solid rgba(191, 219, 254, 0.85);
+        overflow: hidden;
+    }
+
+    .target-plot__frame {
+        position: absolute;
+        inset: 20px 18px 52px 52px;
+    }
+
+    .target-plot__grid-line {
+        position: absolute;
+        background: rgba(148, 163, 184, 0.2);
+    }
+
+    .target-plot__grid-line--horizontal {
+        left: 0;
+        right: 0;
+        height: 1px;
+    }
+
+    .target-plot__grid-line--vertical {
+        top: 0;
+        bottom: 0;
+        width: 1px;
+    }
+
+    .target-plot__y-tick,
+    .target-plot__x-tick {
+        position: absolute;
+        color: #64748b;
+        font-size: 0.76rem;
+        line-height: 1;
+    }
+
+    .target-plot__y-tick {
+        left: 0;
+        transform: translate(-100%, -50%);
+    }
+
+    .target-plot__x-tick {
+        bottom: 0;
+        transform: translateX(-50%);
+    }
+
+    .target-plot__svg {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+    }
+
+    .target-plot__svg polyline {
+        fill: none;
+        stroke: #2563eb;
+        stroke-width: 3;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+    }
+
+    .target-plot__svg circle {
+        fill: #ffffff;
+        stroke: #2563eb;
+        stroke-width: 2;
+    }
+
+    .target-plot__empty {
+        position: absolute;
+        inset: 20px 18px 52px 52px;
+        display: grid;
+        place-items: center;
+        text-align: center;
+        color: #475569;
+    }
+
+    .target-plot__empty strong {
+        display: block;
+        margin-bottom: 8px;
+        color: #0f172a;
+    }
+
+    .target-filter-form {
+        display: grid;
+        gap: 12px;
+    }
+
+    .target-filter-input,
+    .target-filter-select {
+        width: 100%;
+        min-height: 42px;
+        padding: 0 12px;
+        border-radius: 12px;
+        border: 1px solid rgba(148, 163, 184, 0.18);
+        background: rgba(255, 255, 255, 0.04);
+        color: #e2ecf9;
+        font: inherit;
+    }
+
+    .target-filter-input:focus,
+    .target-filter-select:focus {
+        outline: none;
+        border-color: rgba(59, 130, 246, 0.72);
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.14);
+    }
+
+    .target-filter-submit {
+        min-height: 42px;
+        border: 0;
+        border-radius: 12px;
+        background: linear-gradient(135deg, #60a5fa, #2563eb);
+        color: #eff6ff;
+        font: inherit;
+        font-weight: 700;
+        cursor: pointer;
+    }
+
+    .target-filter-submit:disabled {
+        opacity: 0.7;
+        cursor: wait;
+    }
+
+    .target-filter-note {
+        margin: 0;
+        color: rgba(191, 219, 254, 0.74);
+        font-size: 0.82rem;
+        line-height: 1.5;
+    }
+
+    @media (max-width: 980px) {
+        .target-chart-meta {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<section class="panel target-page">
+    <div class="target-page__header">
+        <div>
+            <p class="section-tag">RTO TARGET</p>
+            <h2>RTO优化目标</h2>
+        </div>
+    </div>
+
+    <div class="panel table-panel target-table-panel">
+        <div class="panel-heading target-panel-heading">
+            <div>
+                <h3>优化目标信息表</h3>
+            </div>
+        </div>
+
+        <div class="target-scroll-frame">
+            <form class="target-table-form" id="target-table-form" action="#" method="post">
+                <table class="data-table target-data-table">
+                    <thead>
+                        <tr>
+                            <th>优化目标名称</th>
+                            <th>优化目标选择</th>
+                            <th>单位</th>
+                            <th>优化目标下限</th>
+                            <th>优化目标上限</th>
+                            <th>优化前值</th>
+                            <th>优化后值</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for row in target_rows %}
+                        <tr data-target-row="{{ row.key }}">
+                            <td>{{ row.name }}</td>
+                            <td>
+                                <label class="table-switch">
+                                    <input type="radio" name="selected_target" value="{{ row.key }}" {% if row.selected %}checked{% endif %}>
+                                    <span class="table-switch__track"><span class="table-switch__thumb"></span></span>
+                                </label>
+                            </td>
+                            <td>{{ row.unit }}</td>
+                            <td><input class="table-input table-input--readonly" type="text" value="{{ row.lower_limit }}" readonly data-target-key="{{ row.key }}" data-field="lower_limit"></td>
+                            <td><input class="table-input table-input--readonly" type="text" value="{{ row.upper_limit }}" readonly data-target-key="{{ row.key }}" data-field="upper_limit"></td>
+                            <td><input class="table-input table-input--readonly" type="text" value="{{ row.before_value }}" readonly data-target-key="{{ row.key }}" data-field="before_value"></td>
+                            <td><input class="table-input table-input--readonly" type="text" value="{{ row.after_value }}" readonly data-target-key="{{ row.key }}" data-field="after_value"></td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </form>
+        </div>
+    </div>
+
+    <section class="panel chart-card target-chart-card">
+        <div class="panel-heading">
+            <div>
+                <h3>优化目标增幅比例图</h3>
+            </div>
+        </div>
+
+        {% if influx_error %}
+        <p class="target-query-alert" id="target-query-alert">{{ influx_error }}</p>
+        {% else %}
+        <p class="target-query-alert" id="target-query-alert" hidden></p>
+        {% endif %}
+
+        <div class="chart-layout">
+            <div class="chart-stage">
+                <div class="target-chart-shell">
+                    <div class="target-chart-titlebar">
+                        <div class="chart-legend" id="target-chart-legend"></div>
+                        <span class="target-chart-caption" id="target-chart-caption">按选定优化目标展示增幅比例历史</span>
+                    </div>
+                    <div class="target-plot" id="target-plot"></div>
+                    <div class="target-chart-meta">
+                        <article class="target-chart-metric">
+                            <span>最新增幅</span>
+                            <strong id="target-stat-latest">--</strong>
+                        </article>
+                        <article class="target-chart-metric">
+                            <span>区间最小</span>
+                            <strong id="target-stat-min">--</strong>
+                        </article>
+                        <article class="target-chart-metric">
+                            <span>区间最大</span>
+                            <strong id="target-stat-max">--</strong>
+                        </article>
+                        <article class="target-chart-metric">
+                            <span>区间均值</span>
+                            <strong id="target-stat-avg">--</strong>
+                        </article>
+                    </div>
+                </div>
+            </div>
+
+            <aside class="filter-panel target-filter-panel">
+                <p class="filter-panel__title">查询历史</p>
+                <form id="target-query-form" class="target-filter-form">
+                    <div class="filter-field">
+                        <label for="target-start-at">开始时间</label>
+                        <input class="target-filter-input" id="target-start-at" name="start_at" type="datetime-local" value="{{ target_history.start_at }}">
+                    </div>
+                    <div class="filter-field">
+                        <label for="target-end-at">结束时间</label>
+                        <input class="target-filter-input" id="target-end-at" name="end_at" type="datetime-local" value="{{ target_history.end_at }}">
+                    </div>
+                    <div class="filter-field">
+                        <label for="target-sample-minutes">采样时间</label>
+                        <select class="target-filter-select" id="target-sample-minutes" name="sample_minutes">
+                            {% for option in [5, 15, 30, 60, 120] %}
+                            <option value="{{ option }}" {% if target_history.sample_minutes == option %}selected{% endif %}>{{ option }} min</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <button class="target-filter-submit" id="target-filter-submit" type="submit">提交查询</button>
+                </form>
+                <p class="target-filter-note" id="target-filter-note">
+                    当前区间: {{ target_history.start_display }} 至 {{ target_history.end_display }}
+                </p>
+            </aside>
+        </div>
+    </section>
+</section>
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+<script>
+    (function () {
+        const dataUrl = "{{ url_for('optimization_target_data') }}";
+        const initialPayload = {{ initial_target_payload | tojson }};
+
+        const form = document.getElementById('target-query-form');
+        const tableForm = document.getElementById('target-table-form');
+        const submitButton = document.getElementById('target-filter-submit');
+        const startInput = document.getElementById('target-start-at');
+        const endInput = document.getElementById('target-end-at');
+        const sampleInput = document.getElementById('target-sample-minutes');
+        const chartPlot = document.getElementById('target-plot');
+        const chartLegend = document.getElementById('target-chart-legend');
+        const chartCaption = document.getElementById('target-chart-caption');
+        const filterNote = document.getElementById('target-filter-note');
+        const alertBox = document.getElementById('target-query-alert');
+        const statLatest = document.getElementById('target-stat-latest');
+        const statMin = document.getElementById('target-stat-min');
+        const statMax = document.getElementById('target-stat-max');
+        const statAvg = document.getElementById('target-stat-avg');
+        const targetInputs = document.querySelectorAll('[data-target-key][data-field]');
+
+        if (!form || !tableForm || !chartPlot) {
+            return;
+        }
+
+        function getSelectedTarget() {
+            const checkedInput = tableForm.querySelector('input[name="selected_target"]:checked');
+            return checkedInput ? checkedInput.value : 'lpg_yield';
+        }
+
+        function setSelectedTarget(targetKey) {
+            const targetInput = tableForm.querySelector(`input[name="selected_target"][value="${targetKey}"]`);
+            if (targetInput) {
+                targetInput.checked = true;
+            }
+        }
+
+        function setAlert(message) {
+            if (!alertBox) {
+                return;
+            }
+            if (!message) {
+                alertBox.hidden = true;
+                alertBox.textContent = '';
+                return;
+            }
+            alertBox.hidden = false;
+            alertBox.textContent = message;
+        }
+
+        function updateTargetRows(rows) {
+            if (!Array.isArray(rows)) {
+                return;
+            }
+
+            rows.forEach((row) => {
+                if (!row || !row.key) {
+                    return;
+                }
+
+                ['lower_limit', 'upper_limit', 'before_value', 'after_value'].forEach((field) => {
+                    const input = document.querySelector(`[data-target-key="${row.key}"][data-field="${field}"]`);
+                    if (input) {
+                        input.value = row[field] || '--';
+                    }
+                });
+            });
+        }
+
+        function renderChart(chart, history) {
+            const points = Array.isArray(chart && chart.points) ? chart.points : [];
+            const targetName = chart && chart.target_name ? chart.target_name : '优化目标';
+            const unit = chart && chart.unit ? chart.unit : '%';
+
+            chartLegend.innerHTML = `<span><i style="--series-color:#2563eb"></i>${targetName}增幅比例</span>`;
+            chartCaption.textContent = points.length
+                ? `${targetName}在所选时间范围内共返回 ${points.length} 个采样点`
+                : `${targetName}在当前条件下没有可展示的数据`;
+
+            statLatest.textContent = chart && chart.stats ? `${chart.stats.latest} ${unit}` : '--';
+            statMin.textContent = chart && chart.stats ? `${chart.stats.min} ${unit}` : '--';
+            statMax.textContent = chart && chart.stats ? `${chart.stats.max} ${unit}` : '--';
+            statAvg.textContent = chart && chart.stats ? `${chart.stats.avg} ${unit}` : '--';
+
+            if (history && history.start_display && history.end_display) {
+                filterNote.textContent = `当前区间: ${history.start_display} 至 ${history.end_display}`;
+            }
+
+            if (!points.length) {
+                chartPlot.innerHTML = `
+                    <div class="target-plot__empty">
+                        <div>
+                            <strong>当前查询区间没有数据</strong>
+                            <p>请调整开始时间、结束时间或采样时间后重新查询。</p>
+                        </div>
+                    </div>
+                `;
+                return;
+            }
+
+            const width = 860;
+            const height = 300;
+            const values = points.map((point) => Number(point.value));
+            const minValue = Math.min(...values);
+            const maxValue = Math.max(...values);
+            const spread = Math.max(maxValue - minValue, 0.2);
+            const paddedMin = minValue - spread * 0.18;
+            const paddedMax = maxValue + spread * 0.18;
+            const yRange = paddedMax - paddedMin || 1;
+            const xCount = points.length;
+
+            const polylinePoints = points.map((point, index) => {
+                const x = xCount === 1 ? width / 2 : (index / (xCount - 1)) * width;
+                const y = height - ((Number(point.value) - paddedMin) / yRange) * height;
+                return `${x.toFixed(2)},${y.toFixed(2)}`;
+            }).join(' ');
+
+            const circles = points.map((point, index) => {
+                const x = xCount === 1 ? width / 2 : (index / (xCount - 1)) * width;
+                const y = height - ((Number(point.value) - paddedMin) / yRange) * height;
+                return `<circle cx="${x.toFixed(2)}" cy="${y.toFixed(2)}" r="4"></circle>`;
+            }).join('');
+
+            const yTicks = Array.from({ length: 5 }, (_, index) => {
+                const ratio = index / 4;
+                const value = paddedMax - (paddedMax - paddedMin) * ratio;
+                const top = ratio * 100;
+                return `
+                    <span class="target-plot__grid-line target-plot__grid-line--horizontal" style="top:${top}%;"></span>
+                    <span class="target-plot__y-tick" style="top:${top}%;">${value.toFixed(3)}</span>
+                `;
+            }).join('');
+
+            const xStep = Math.max(1, Math.ceil(points.length / 6));
+            const xTicks = points
+                .map((point, index) => ({ point, index }))
+                .filter(({ index }) => index % xStep === 0 || index === points.length - 1)
+                .map(({ point, index }) => {
+                    const left = xCount === 1 ? 50 : (index / (xCount - 1)) * 100;
+                    return `
+                        <span class="target-plot__grid-line target-plot__grid-line--vertical" style="left:${left}%;"></span>
+                        <span class="target-plot__x-tick" style="left:${left}%;">${point.time_label}</span>
+                    `;
+                })
+                .join('');
+
+            chartPlot.innerHTML = `
+                <div class="target-plot__frame">
+                    ${yTicks}
+                    ${xTicks}
+                    <svg class="target-plot__svg" viewBox="0 0 ${width} ${height}" preserveAspectRatio="none" aria-label="${targetName}增幅比例图">
+                        <polyline points="${polylinePoints}"></polyline>
+                        ${circles}
+                    </svg>
+                </div>
+            `;
+        }
+
+        function applyPayload(payload) {
+            if (!payload) {
+                return;
+            }
+
+            setSelectedTarget(payload.selected_target || getSelectedTarget());
+            updateTargetRows(payload.target_rows);
+
+            if (payload.target_history) {
+                if (payload.target_history.start_at) {
+                    startInput.value = payload.target_history.start_at;
+                }
+                if (payload.target_history.end_at) {
+                    endInput.value = payload.target_history.end_at;
+                }
+                if (payload.target_history.sample_minutes) {
+                    sampleInput.value = String(payload.target_history.sample_minutes);
+                }
+            }
+
+            renderChart(payload.chart, payload.target_history);
+            setAlert(payload.error || '');
+        }
+
+        async function requestPayload() {
+            const query = new URLSearchParams({
+                target: getSelectedTarget(),
+                start_at: startInput.value,
+                end_at: endInput.value,
+                sample_minutes: sampleInput.value
+            });
+
+            submitButton.disabled = true;
+            submitButton.textContent = '查询中...';
+            setAlert('');
+
+            try {
+                const response = await fetch(`${dataUrl}?${query.toString()}`, { credentials: 'same-origin' });
+                const payload = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(payload.error || `HTTP ${response.status}`);
+                }
+
+                applyPayload(payload);
+            } catch (error) {
+                setAlert(error.message || '查询失败，请稍后重试。');
+            } finally {
+                submitButton.disabled = false;
+                submitButton.textContent = '提交查询';
+            }
+        }
+
+        form.addEventListener('submit', function (event) {
+            event.preventDefault();
+            requestPayload();
+        });
+
+        applyPayload(initialPayload);
+    })();
+</script>
+{% endblock %}

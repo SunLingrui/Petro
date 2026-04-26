@@ -1,0 +1,13 @@
+{% extends "navigation.html" %}
+
+{% block title %}{{ page_title }}{% endblock %}
+
+{% block content %}
+<section class="panel blank-state-panel">
+    <div>
+        <p class="section-tag">RTO OPERATION</p>
+        <h2>RTO运行</h2>
+        <p>{{ operation_data.copy }}</p>
+    </div>
+</section>
+{% endblock %}

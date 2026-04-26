@@ -1,0 +1,67 @@
+{% extends "navigation.html" %}
+{% set body_class = "auth-body" %}
+{% set hide_app_nav = true %}
+
+{% block title %}{{ page_title }}{% endblock %}
+
+{% block styles %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/login.css') }}">
+{% endblock %}
+
+{% block content %}
+<section class="auth-shell">
+    <div class="auth-visual">
+        <p class="auth-visual__eyebrow">ACCOUNT REGISTER</p>
+        <h1>创建系统账号</h1>
+        <div class="auth-visual__grid">
+            <div class="visual-card">
+                <strong>系统首页</strong>
+                <span>运行状态、目标收益、曲线概览</span>
+            </div>
+            <div class="visual-card">
+                <strong>监测页面</strong>
+                <span>优化目标、优化变量、价格与化验分析</span>
+            </div>
+            <div class="visual-card">
+                <strong>参数配置</strong>
+                <span>反馈优化参数与模型参数集中展示</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="auth-panel">
+        <p class="auth-panel__tag">CREATE ACCOUNT</p>
+        <h2>账号注册</h2>
+        <p class="auth-panel__subtitle">填写基础信息，创建系统账号。</p>
+
+        <form class="auth-form" action="{{ url_for('register') }}" method="POST">
+            <label class="auth-field" for="username">
+                <span>用户名</span>
+                <input id="username" name="username" type="text" placeholder="请输入用户名" required>
+            </label>
+
+            <label class="auth-field" for="email">
+                <span>邮箱</span>
+                <input id="email" name="email" type="email" placeholder="请输入邮箱地址" required>
+            </label>
+
+            <label class="auth-field" for="password">
+                <span>密码</span>
+                <input id="password" name="password" type="password" placeholder="请输入密码" required>
+            </label>
+
+            <label class="auth-field" for="password2">
+                <span>确认密码</span>
+                <input id="password2" name="password2" type="password" placeholder="请再次输入密码" required>
+            </label>
+
+            <button class="auth-submit" type="submit">完成注册</button>
+        </form>
+
+        <p class="auth-switch">
+            已有账号？
+            <a href="{{ url_for('login') }}">返回登录</a>
+        </p>
+    </div>
+</section>
+{% endblock %}

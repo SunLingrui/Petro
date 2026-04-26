@@ -1,0 +1,68 @@
+{% extends "navigation.html" %}
+
+{% block title %}{{ page_title }}{% endblock %}
+
+{% block content %}
+<section class="profile-shell">
+    <section class="panel profile-summary">
+        <p class="section-tag">PROFILE</p>
+        <h2>个人资料</h2>
+        <p>这里先保留基础账户设置，当前可以修改用户名、邮箱和登录密码。</p>
+
+        <div class="profile-summary-grid">
+            <article class="profile-stat">
+                <span>当前用户名</span>
+                <strong>{{ user.name }}</strong>
+            </article>
+            <article class="profile-stat">
+                <span>当前邮箱</span>
+                <strong>{{ user.email }}</strong>
+            </article>
+            <article class="profile-stat">
+                <span>账号编号</span>
+                <strong>#{{ user.id }}</strong>
+            </article>
+        </div>
+    </section>
+
+    <section class="profile-grid">
+        <article class="panel profile-card">
+            <h3>基础信息</h3>
+            <p>修改用户名和邮箱后会立即更新当前登录显示。</p>
+
+            <form class="profile-form" action="{{ url_for('edit_profile') }}" method="post">
+                <div class="profile-field">
+                    <label for="profile-username">用户名</label>
+                    <input id="profile-username" name="username" type="text" value="{{ user.name }}" required>
+                </div>
+                <div class="profile-field">
+                    <label for="profile-email">邮箱</label>
+                    <input id="profile-email" name="email" type="email" value="{{ user.email }}" required>
+                </div>
+                <button class="profile-submit" type="submit">保存资料</button>
+            </form>
+        </article>
+
+        <article class="panel profile-card">
+            <h3>修改密码</h3>
+            <p>请输入当前密码，再设置新的登录密码。</p>
+
+            <form class="profile-form" action="{{ url_for('change_password') }}" method="post">
+                <div class="profile-field">
+                    <label for="current-password">当前密码</label>
+                    <input id="current-password" name="current_password" type="password" required>
+                </div>
+                <div class="profile-field">
+                    <label for="new-password">新密码</label>
+                    <input id="new-password" name="new_password" type="password" required>
+                </div>
+                <div class="profile-field">
+                    <label for="confirm-password">确认新密码</label>
+                    <input id="confirm-password" name="confirm_password" type="password" required>
+                </div>
+                <button class="profile-submit" type="submit">更新密码</button>
+            </form>
+        </article>
+    </section>
+</section>
+{% endblock %}

@@ -1,0 +1,57 @@
+{% extends "navigation.html" %}
+{% set body_class = "auth-body" %}
+{% set hide_app_nav = true %}
+
+{% block title %}{{ page_title }}{% endblock %}
+
+{% block styles %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/login.css') }}">
+{% endblock %}
+
+{% block content %}
+<section class="auth-shell">
+    <div class="auth-visual">
+        <p class="auth-visual__eyebrow">RTO MONITORING PORTAL</p>
+        <h1>催化裂化装置实时优化系统</h1>
+        <div class="auth-visual__grid">
+            <div class="visual-card">
+                <strong>实时监测</strong>
+                <span>运行状态、目标曲线、变量趋势</span>
+            </div>
+            <div class="visual-card">
+                <strong>数据预留</strong>
+                <span>图表区域已为 InfluxDB 与历史查询预留接口</span>
+            </div>
+            <div class="visual-card">
+                <strong>工业风格</strong>
+                <span>按参考稿重做信息架构与视觉层级</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="auth-panel">
+        <p class="auth-panel__tag">SYSTEM LOGIN</p>
+        <h2>账号登录</h2>
+        <p class="auth-panel__subtitle">使用系统账号进入实时优化控制界面。</p>
+
+        <form class="auth-form" action="{{ url_for('login') }}" method="POST">
+            <label class="auth-field" for="username">
+                <span>用户名</span>
+                <input id="username" name="username" type="text" placeholder="请输入用户名" required>
+            </label>
+
+            <label class="auth-field" for="password">
+                <span>密码</span>
+                <input id="password" name="password" type="password" placeholder="请输入密码" required>
+            </label>
+
+            <button class="auth-submit" type="submit">登录系统</button>
+        </form>
+
+        <p class="auth-switch">
+            没有账号？
+            <a href="{{ url_for('register') }}">创建账号</a>
+        </p>
+    </div>
+</section>
+{% endblock %}

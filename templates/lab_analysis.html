@@ -1,0 +1,178 @@
+{% extends "navigation.html" %}
+
+{% block title %}{{ page_title }}{% endblock %}
+
+{% block content %}
+<section class="panel variable-monitor-page">
+    <div class="variable-monitor-titlebar">
+        <div>
+            <p class="section-tag">LAB ANALYSIS</p>
+            <h2>化验分析数据</h2>
+        </div>
+    </div>
+
+    <section class="analytics-chart-block variable-monitor-chart">
+        <div class="variable-monitor-chart__header">
+            <h3>原料化验分析数据变化曲线</h3>
+        </div>
+        <div class="variable-monitor-chart__layout">
+            <div class="variable-monitor-chart__stage">
+                <div class="variable-monitor-legend">
+                    <span><i style="--series-color:#5b8ff9"></i>混合进料密度</span>
+                    <span><i style="--series-color:#8bd17c"></i>混合进料残碳</span>
+                </div>
+                <div class="variable-monitor-plot">
+                    <div class="variable-monitor-plot__frame">
+                        <span class="variable-monitor-y-tick" style="top:100%;">0</span>
+                        <span class="variable-monitor-y-tick" style="top:82%;">200</span>
+                        <span class="variable-monitor-y-tick" style="top:64%;">400</span>
+                        <span class="variable-monitor-y-tick" style="top:46%;">600</span>
+                        <span class="variable-monitor-y-tick" style="top:28%;">800</span>
+                        <span class="variable-monitor-y-tick" style="top:10%;">1000</span>
+                        <span class="variable-monitor-y-tick" style="top:0;">1112</span>
+
+                        <span class="variable-monitor-grid-line variable-monitor-grid-line--horizontal" style="top:100%;"></span>
+                        <span class="variable-monitor-grid-line variable-monitor-grid-line--horizontal" style="top:82%;"></span>
+                        <span class="variable-monitor-grid-line variable-monitor-grid-line--horizontal" style="top:64%;"></span>
+                        <span class="variable-monitor-grid-line variable-monitor-grid-line--horizontal" style="top:46%;"></span>
+                        <span class="variable-monitor-grid-line variable-monitor-grid-line--horizontal" style="top:28%;"></span>
+                        <span class="variable-monitor-grid-line variable-monitor-grid-line--horizontal" style="top:10%;"></span>
+                        <span class="variable-monitor-grid-line variable-monitor-grid-line--horizontal" style="top:0;"></span>
+
+                        <span class="variable-monitor-grid-line variable-monitor-grid-line--vertical" style="left:0;"></span>
+                        <span class="variable-monitor-grid-line variable-monitor-grid-line--vertical" style="left:20%;"></span>
+                        <span class="variable-monitor-grid-line variable-monitor-grid-line--vertical" style="left:40%;"></span>
+                        <span class="variable-monitor-grid-line variable-monitor-grid-line--vertical" style="left:60%;"></span>
+                        <span class="variable-monitor-grid-line variable-monitor-grid-line--vertical" style="left:80%;"></span>
+                        <span class="variable-monitor-grid-line variable-monitor-grid-line--vertical" style="left:100%;"></span>
+
+                        <svg class="variable-monitor-svg" viewBox="0 0 860 360" preserveAspectRatio="none" aria-label="原料化验分析数据变化曲线">
+                            <polyline stroke="#5b8ff9" points="0,360 140,360 175,61 860,61"></polyline>
+                            <polyline stroke="#8bd17c" points="0,360 140,360 175,358 860,358"></polyline>
+                        </svg>
+
+                        <span class="variable-monitor-x-tick" style="left:0;">25</span>
+                        <span class="variable-monitor-x-tick" style="left:20%;">27</span>
+                        <span class="variable-monitor-x-tick" style="left:40%;">29</span>
+                        <span class="variable-monitor-x-tick" style="left:60%;">31</span>
+                        <span class="variable-monitor-x-tick" style="left:80%;">6月</span>
+                        <span class="variable-monitor-x-tick" style="left:100%;">3</span>
+                    </div>
+                </div>
+            </div>
+
+            <aside class="variable-monitor-history">
+                <div class="variable-monitor-history__topbar">
+                    <label class="history-toggle">
+                        <input type="checkbox" {% if feed_history_data.enabled %}checked{% endif %}>
+                        <span>查询历史</span>
+                    </label>
+                    <div class="variable-monitor-history__nav"><span>&lsaquo;</span><span>&rsaquo;</span></div>
+                </div>
+                <div class="filter-field">
+                    <label>开始</label>
+                    <div class="variable-monitor-readout">
+                        <span>{{ feed_history_data.start_date }}</span>
+                        <span>{{ feed_history_data.start_time }}</span>
+                    </div>
+                </div>
+                <div class="filter-field">
+                    <label>结束</label>
+                    <div class="variable-monitor-readout">
+                        <span>{{ feed_history_data.end_date }}</span>
+                        <span>{{ feed_history_data.end_time }}</span>
+                    </div>
+                </div>
+                <div class="filter-field">
+                    <label>采样间隔</label>
+                    <div class="variable-monitor-readout"><span>{{ feed_history_data.sample_interval }}</span></div>
+                </div>
+            </aside>
+        </div>
+    </section>
+
+    <section class="analytics-chart-block variable-monitor-chart">
+        <div class="variable-monitor-chart__header">
+            <h3>产品化验分析数据变化曲线</h3>
+        </div>
+        <div class="variable-monitor-chart__layout">
+            <div class="variable-monitor-chart__stage">
+                <div class="variable-monitor-legend">
+                    <span><i style="--series-color:#5b8ff9"></i>汽油产品密度</span>
+                    <span><i style="--series-color:#8bd17c"></i>汽油产品终馏点</span>
+                    <span><i style="--series-color:#f6bd16"></i>柴油产品密度</span>
+                    <span><i style="--series-color:#ff6b6b"></i>柴油产品95%点</span>
+                </div>
+                <div class="variable-monitor-plot">
+                    <div class="variable-monitor-plot__frame">
+                        <span class="variable-monitor-y-tick" style="top:100%;">0</span>
+                        <span class="variable-monitor-y-tick" style="top:84%;">200</span>
+                        <span class="variable-monitor-y-tick" style="top:68%;">400</span>
+                        <span class="variable-monitor-y-tick" style="top:52%;">600</span>
+                        <span class="variable-monitor-y-tick" style="top:36%;">800</span>
+                        <span class="variable-monitor-y-tick" style="top:20%;">1000</span>
+                        <span class="variable-monitor-y-tick" style="top:0;">1200</span>
+
+                        <span class="variable-monitor-grid-line variable-monitor-grid-line--horizontal" style="top:100%;"></span>
+                        <span class="variable-monitor-grid-line variable-monitor-grid-line--horizontal" style="top:84%;"></span>
+                        <span class="variable-monitor-grid-line variable-monitor-grid-line--horizontal" style="top:68%;"></span>
+                        <span class="variable-monitor-grid-line variable-monitor-grid-line--horizontal" style="top:52%;"></span>
+                        <span class="variable-monitor-grid-line variable-monitor-grid-line--horizontal" style="top:36%;"></span>
+                        <span class="variable-monitor-grid-line variable-monitor-grid-line--horizontal" style="top:20%;"></span>
+                        <span class="variable-monitor-grid-line variable-monitor-grid-line--horizontal" style="top:0;"></span>
+
+                        <span class="variable-monitor-grid-line variable-monitor-grid-line--vertical" style="left:0;"></span>
+                        <span class="variable-monitor-grid-line variable-monitor-grid-line--vertical" style="left:20%;"></span>
+                        <span class="variable-monitor-grid-line variable-monitor-grid-line--vertical" style="left:40%;"></span>
+                        <span class="variable-monitor-grid-line variable-monitor-grid-line--vertical" style="left:60%;"></span>
+                        <span class="variable-monitor-grid-line variable-monitor-grid-line--vertical" style="left:80%;"></span>
+                        <span class="variable-monitor-grid-line variable-monitor-grid-line--vertical" style="left:100%;"></span>
+
+                        <svg class="variable-monitor-svg" viewBox="0 0 860 360" preserveAspectRatio="none" aria-label="产品化验分析数据变化曲线">
+                            <polyline stroke="#5b8ff9" points="0,360 140,360 175,142 860,142"></polyline>
+                            <polyline stroke="#8bd17c" points="0,360 140,360 175,306 860,306"></polyline>
+                            <polyline stroke="#f6bd16" points="0,360 140,360 175,84 860,84"></polyline>
+                            <polyline stroke="#ff6b6b" points="0,360 140,360 175,306 860,306"></polyline>
+                        </svg>
+
+                        <span class="variable-monitor-x-tick" style="left:0;">25</span>
+                        <span class="variable-monitor-x-tick" style="left:20%;">27</span>
+                        <span class="variable-monitor-x-tick" style="left:40%;">29</span>
+                        <span class="variable-monitor-x-tick" style="left:60%;">31</span>
+                        <span class="variable-monitor-x-tick" style="left:80%;">6月</span>
+                        <span class="variable-monitor-x-tick" style="left:100%;">3</span>
+                    </div>
+                </div>
+            </div>
+
+            <aside class="variable-monitor-history">
+                <div class="variable-monitor-history__topbar">
+                    <label class="history-toggle">
+                        <input type="checkbox" {% if product_history_data.enabled %}checked{% endif %}>
+                        <span>查询历史</span>
+                    </label>
+                    <div class="variable-monitor-history__nav"><span>&lsaquo;</span><span>&rsaquo;</span></div>
+                </div>
+                <div class="filter-field">
+                    <label>开始</label>
+                    <div class="variable-monitor-readout">
+                        <span>{{ product_history_data.start_date }}</span>
+                        <span>{{ product_history_data.start_time }}</span>
+                    </div>
+                </div>
+                <div class="filter-field">
+                    <label>结束</label>
+                    <div class="variable-monitor-readout">
+                        <span>{{ product_history_data.end_date }}</span>
+                        <span>{{ product_history_data.end_time }}</span>
+                    </div>
+                </div>
+                <div class="filter-field">
+                    <label>采样间隔</label>
+                    <div class="variable-monitor-readout"><span>{{ product_history_data.sample_interval }}</span></div>
+                </div>
+            </aside>
+        </div>
+    </section>
+</section>
+{% endblock %}

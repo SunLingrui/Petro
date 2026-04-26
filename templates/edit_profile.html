@@ -1,0 +1,25 @@
+{% extends "navigation.html" %}
+
+{% block title %}{{ page_title }}{% endblock %}
+
+{% block content %}
+<section class="profile-shell">
+    <article class="panel profile-card">
+        <p class="section-tag">PROFILE EDIT</p>
+        <h3>编辑资料</h3>
+        <p>修改用户名和邮箱。</p>
+
+        <form class="profile-form" action="{{ url_for('edit_profile') }}" method="post">
+            <div class="profile-field">
+                <label for="edit-username">用户名</label>
+                <input id="edit-username" name="username" type="text" value="{{ user.name }}" required>
+            </div>
+            <div class="profile-field">
+                <label for="edit-email">邮箱</label>
+                <input id="edit-email" name="email" type="email" value="{{ user.email }}" required>
+            </div>
+            <button class="profile-submit" type="submit">保存资料</button>
+        </form>
+    </article>
+</section>
+{% endblock %}
