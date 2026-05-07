@@ -31,6 +31,12 @@ TARGET_DEFINITIONS = {
     "liquid_yield": {"name": "液收", "unit": "%", "lower_limit": 55.0, "upper_limit": 90.0},
 }
 
+MAIN_TARGET_CHART_SERIES = [
+    {"field": "before_value", "label_suffix": "优化前值", "color": "#3f7bd9"},
+    {"field": "current_value", "label_suffix": "当前值", "color": "#ffc44d"},
+    {"field": "after_value", "label_suffix": "优化后值", "color": "#6bbf59"},
+]
+
 VARIABLE_ORDER = [
     "reactor_temperature",
     "catalyst_oil_ratio",
@@ -207,6 +213,27 @@ MARKET_CHART_GROUPS = {
     "cost": {"title": "成本价格变化曲线", "unit": "元/吨"},
 }
 
+RUNTIME_STATUS_FIELDS = ["value", "text_value", "bool_value"]
+
+RUNTIME_STATUS_DEFINITIONS = {
+    "today_runs": {"label": "RTO今日运行次数", "field": "value", "digits": 0, "fallback": "85"},
+    "yesterday_runs": {"label": "RTO昨日运行次数", "field": "value", "digits": 0, "fallback": "0"},
+    "month_runs": {"label": "RTO本月运行次数", "field": "value", "digits": 0, "fallback": "85"},
+    "total_runs": {"label": "RTO累计运行次数", "field": "value", "digits": 0, "fallback": "85"},
+    "latest_plan_time": {"label": "最新优化计算时刻", "field": "text_value", "fallback": "14:40:00"},
+    "next_plan_remaining": {"label": "距下次优化计算剩余时间", "field": "value", "digits": 0, "fallback": "1"},
+    "runtime_days": {"label": "RTO运行天数", "field": "value", "digits": 0, "fallback": "1"},
+    "usage_rate": {"label": "RTO投用率", "field": "value", "digits": 0, "fallback": "100"},
+    "master_switch_on": {"label": "RTO总开关", "field": "bool_value", "fallback": True},
+    "equipment_status": {"label": "装置稳态状态", "field": "text_value", "fallback": "稳态"},
+    "runtime_status": {"label": "RTO运行状态", "field": "text_value", "fallback": "正常"},
+    "apc_status": {"label": "RTO与APC联动状态", "field": "text_value", "fallback": "非联动"},
+    "program_status": {"label": "RTO程序运行状态", "field": "text_value", "fallback": "未开始"},
+    "execution_rate": {"label": "RTO执行投用率", "field": "value", "digits": 0, "fallback": "100"},
+    "price_benefit": {"label": "影子价格效益", "field": "value", "digits": 4, "fallback": "104.9286"},
+    "cost_benefit": {"label": "成本价格效益", "field": "value", "digits": 4, "fallback": "219.3456"},
+}
+
 
 class InfluxQueryError(RuntimeError):
     pass
@@ -294,6 +321,14 @@ def _to_bool(raw_value: str | None, fallback: bool = False) -> bool:
     return raw_value.strip().lower() in {"true", "t", "1", "yes", "y"}
 
 
+def _runtime_status_class(status_key: str, status_text: str) -> str:
+    if status_key in {"equipment_status", "runtime_status"}:
+        return "state-good" if status_text in {"稳态", "正常", "运行中"} else "state-danger"
+    if status_key in {"apc_status", "program_status"}:
+        return "state-good" if status_text in {"联动", "已联动", "运行中", "已开始"} else "state-danger"
+    return ""
+
+
 def _parse_utc_datetime(raw_value: str) -> datetime:
     return datetime.fromisoformat(raw_value.replace("Z", "+00:00")).astimezone(timezone.utc)
 
@@ -330,6 +365,17 @@ def _normalize_target_key(target_key: str | None) -> str:
     if target_key in TARGET_DEFINITIONS:
         return target_key
     return DEFAULT_TARGET_KEY
+
+
+def _build_target_options(selected_target: str) -> list[dict[str, Any]]:
+    return [
+        {
+            "key": target_key,
+            "name": TARGET_DEFINITIONS[target_key]["name"],
+            "selected": target_key == selected_target,
+        }
+        for target_key in TARGET_ORDER
+    ]
 
 
 def _normalize_variable_key(variable_key: str | None) -> str:
@@ -1065,6 +1111,184 @@ def build_empty_raw_product_prices_payload(error_message: str | None = None) -> 
     return {
         "raw_material": build_empty_market_price_chart_payload("raw_material", error_message),
         "product": build_empty_market_price_chart_payload("product", error_message),
+        "generated_at": datetime.now(timezone.utc).isoformat(),
+        "error": error_message,
+    }
+
+
+def _fetch_runtime_status_rows() -> dict[str, dict[str, str]]:
+    config = _get_required_config()
+    field_clause = _flux_or_conditions("_field", RUNTIME_STATUS_FIELDS)
+    status_clause = _flux_or_conditions("status_key", list(RUNTIME_STATUS_DEFINITIONS.keys()))
+    flux = f"""
+from(bucket: "{config['bucket']}")
+  |> range(start: -365d)
+  |> filter(fn: (r) =>
+    r._measurement == "rto_runtime_status" and
+    r.page == "main" and
+    ({field_clause}) and
+    ({status_clause})
+  )
+  |> group(columns: ["status_key", "_field"])
+  |> last()
+  |> keep(columns: ["status_key", "_field", "_value"])
+""".strip()
+
+    rows_by_key: dict[str, dict[str, str]] = {}
+    for row in _query_flux_rows(flux):
+        status_key = row.get("status_key")
+        field_name = row.get("_field")
+        if status_key and field_name:
+            rows_by_key.setdefault(status_key, {})[field_name] = row.get("_value", "")
+    return rows_by_key
+
+
+def _build_runtime_main_data(rows_by_key: dict[str, dict[str, str]]) -> dict[str, Any]:
+    main_data: dict[str, Any] = {}
+    for status_key, definition in RUNTIME_STATUS_DEFINITIONS.items():
+        row = rows_by_key.get(status_key, {})
+        field_name = definition["field"]
+
+        if field_name == "value":
+            raw_number = _to_float(row.get("value"))
+            main_data[status_key] = _format_number(raw_number, definition.get("digits", 4)) if raw_number is not None else definition["fallback"]
+            continue
+
+        if field_name == "bool_value":
+            main_data[status_key] = _to_bool(row.get("bool_value"), bool(definition["fallback"]))
+            continue
+
+        status_text = (row.get("text_value") or definition["fallback"]).strip()
+        main_data[status_key] = status_text
+        status_class = _runtime_status_class(status_key, status_text)
+        if status_class:
+            main_data[f"{status_key}_class"] = status_class
+
+    return main_data
+
+
+def get_runtime_status_payload() -> dict[str, Any]:
+    rows_by_key = _fetch_runtime_status_rows()
+    return {
+        "main_data": _build_runtime_main_data(rows_by_key),
+        "generated_at": datetime.now(timezone.utc).isoformat(),
+    }
+
+
+def build_empty_runtime_status_payload(error_message: str | None = None) -> dict[str, Any]:
+    return {
+        "main_data": _build_runtime_main_data({}),
+        "generated_at": datetime.now(timezone.utc).isoformat(),
+        "error": error_message,
+    }
+
+
+def _fetch_main_target_chart_points(target_key: str, start_at: datetime, end_at: datetime, sample_minutes: int) -> list[dict[str, Any]]:
+    config = _get_required_config()
+    start_flux = _format_flux_time(start_at)
+    end_flux = _format_flux_time(end_at)
+    field_clause = _flux_or_conditions("_field", [series["field"] for series in MAIN_TARGET_CHART_SERIES])
+    flux = f"""
+from(bucket: "{config['bucket']}")
+  |> range(start: {start_flux}, stop: {end_flux})
+  |> filter(fn: (r) =>
+    r._measurement == "rto_target_metrics" and
+    r.page == "optimization_target" and
+    r.target_key == "{target_key}" and
+    ({field_clause})
+  )
+  |> aggregateWindow(every: {sample_minutes}m, fn: mean, createEmpty: false)
+  |> pivot(rowKey: ["_time"], columnKey: ["_field"], valueColumn: "_value")
+""".strip()
+
+    points: list[dict[str, Any]] = []
+    for row in _query_flux_rows(flux):
+        point_time = _parse_utc_datetime(row["_time"])
+        point = {
+            "timestamp": point_time.isoformat(),
+            "time_label": point_time.astimezone(_get_timezone()).strftime("%m-%d %H:%M"),
+        }
+        has_value = False
+        for series in MAIN_TARGET_CHART_SERIES:
+            value = _to_float(row.get(series["field"]))
+            if value is not None:
+                point[series["field"]] = round(value, 4)
+                has_value = True
+        if has_value:
+            points.append(point)
+    return points
+
+
+def _build_main_target_chart_payload(target_key: str, points: list[dict[str, Any]]) -> dict[str, Any]:
+    definition = TARGET_DEFINITIONS[target_key]
+    series_meta = [
+        {
+            "field": series["field"],
+            "label": f"{definition['name']}{series['label_suffix']}",
+            "color": series["color"],
+        }
+        for series in MAIN_TARGET_CHART_SERIES
+        if any(series["field"] in point for point in points)
+    ]
+
+    y_values: list[float] = []
+    for point in points:
+        for series in series_meta:
+            value = point.get(series["field"])
+            if value is not None:
+                y_values.append(float(value))
+
+    return {
+        "target_key": target_key,
+        "target_name": definition["name"],
+        "unit": definition["unit"],
+        "title": "优化目标曲线图",
+        "points": points,
+        "series_meta": series_meta,
+        "y_min": min(y_values) if y_values else 0.0,
+        "y_max": max(y_values) if y_values else 1.0,
+    }
+
+
+def get_main_target_chart_payload(
+    target_key: str | None = None,
+    start_local: str | None = None,
+    end_local: str | None = None,
+    sample_minutes: str | int | None = None,
+) -> dict[str, Any]:
+    selected_target = _normalize_target_key(target_key)
+    start_at, end_at, resolved_sample = _resolve_query_window(
+        start_local,
+        end_local,
+        sample_minutes,
+        measurement="rto_target_metrics",
+        field_name="after_value",
+    )
+    points = _fetch_main_target_chart_points(selected_target, start_at, end_at, resolved_sample)
+    return {
+        "selected_target": selected_target,
+        "target_options": _build_target_options(selected_target),
+        "history_data": _build_history_payload(start_at, end_at, resolved_sample),
+        "chart": _build_main_target_chart_payload(selected_target, points),
+        "generated_at": datetime.now(timezone.utc).isoformat(),
+    }
+
+
+def build_empty_main_target_chart_payload(target_key: str | None = None, error_message: str | None = None) -> dict[str, Any]:
+    selected_target = _normalize_target_key(target_key)
+    now_local = datetime.now(_get_timezone())
+    start_at = now_local - timedelta(hours=4)
+    return {
+        "selected_target": selected_target,
+        "target_options": _build_target_options(selected_target),
+        "history_data": {
+            "start_at": start_at.strftime("%Y-%m-%dT%H:%M"),
+            "end_at": now_local.strftime("%Y-%m-%dT%H:%M"),
+            "sample_minutes": DEFAULT_SAMPLE_MINUTES,
+            "start_display": start_at.strftime("%Y-%m-%d %H:%M"),
+            "end_display": now_local.strftime("%Y-%m-%d %H:%M"),
+        },
+        "chart": _build_main_target_chart_payload(selected_target, []),
         "generated_at": datetime.now(timezone.utc).isoformat(),
         "error": error_message,
     }

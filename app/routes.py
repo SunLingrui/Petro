@@ -7,18 +7,22 @@ from . import app, db
 from .models import User
 from .services.influx_service import (
     InfluxQueryError,
+    build_empty_main_target_chart_payload,
     build_empty_market_price_chart_payload,
     build_empty_optimization_variables_payload,
     build_empty_optimization_target_payload,
     build_empty_price_lab_overview_payload,
     build_empty_raw_product_prices_payload,
+    build_empty_runtime_status_payload,
     build_empty_variable_detail_payload,
+    get_main_target_chart_payload,
     get_market_price_chart_payload,
     get_optimization_variables_payload,
     get_import_payload,
     get_optimization_target_payload,
     get_price_lab_overview_payload,
     get_raw_product_prices_payload,
+    get_runtime_status_payload,
     get_variable_detail_payload,
     get_variable_key_by_slug,
 )
@@ -92,29 +96,58 @@ def root():
 @app.route("/index")
 @login_required
 def main():
-    main_data = {
-        "today_runs": "85",
-        "yesterday_runs": "0",
-        "month_runs": "85",
-        "total_runs": "85",
-        "latest_plan_time": "14:40:00",
-        "next_plan_remaining": "1",
-        "runtime_days": "1",
-        "usage_rate": "100",
-        "master_switch_on": True,
-        "equipment_status": "稳态",
-        "equipment_status_class": "state-good",
-        "runtime_status": "正常",
-        "runtime_status_class": "state-good",
-        "apc_status": "非联动",
-        "apc_status_class": "state-danger",
-        "program_status": "未开始",
-        "program_status_class": "state-danger",
-        "execution_rate": "100",
-        "price_benefit": "104.9286",
-        "cost_benefit": "219.3456",
-    }
-    return render_system_template("main.html", "系统首页", "main", main_data=main_data)
+    requested_target = request.args.get("target")
+    requested_start = request.args.get("start_at")
+    requested_end = request.args.get("end_at")
+    requested_sample = request.args.get("sample_minutes")
+
+    try:
+        runtime_payload = get_runtime_status_payload()
+        chart_payload = get_main_target_chart_payload(
+            target_key=requested_target,
+            start_local=requested_start,
+            end_local=requested_end,
+            sample_minutes=requested_sample,
+        )
+        influx_error = None
+    except InfluxQueryError as exc:
+        influx_error = str(exc)
+        runtime_payload = build_empty_runtime_status_payload(error_message=influx_error)
+        chart_payload = build_empty_main_target_chart_payload(target_key=requested_target, error_message=influx_error)
+
+    return render_system_template(
+        "main.html",
+        "系统首页",
+        "main",
+        main_data=runtime_payload["main_data"],
+        main_target_payload=chart_payload,
+        influx_error=influx_error,
+    )
+
+
+@app.route("/main/status/data")
+@login_required
+def main_status_data():
+    try:
+        payload = get_runtime_status_payload()
+    except InfluxQueryError as exc:
+        return jsonify({"error": str(exc)}), 502
+    return jsonify(payload)
+
+
+@app.route("/main/target-chart/data")
+@login_required
+def main_target_chart_data():
+    try:
+        payload = get_main_target_chart_payload(
+            target_key=request.args.get("target"),
+            start_local=request.args.get("start_at"),
+            end_local=request.args.get("end_at"),
+            sample_minutes=request.args.get("sample_minutes"),
+        )
+    except InfluxQueryError as exc:
+        return jsonify({"error": str(exc)}), 502
+    return jsonify(payload)
 
 
 @app.route("/login", methods=["GET", "POST"])

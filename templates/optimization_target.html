@@ -361,6 +361,14 @@
                 <p class="filter-panel__title">查询历史</p>
                 <form id="target-query-form" class="target-filter-form">
                     <div class="filter-field">
+                        <label for="target-select">优化目标</label>
+                        <select class="target-filter-select" id="target-select" name="target">
+                            {% for row in target_rows %}
+                            <option value="{{ row.key }}" {% if row.selected %}selected{% endif %}>{{ row.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="filter-field">
                         <label for="target-start-at">开始时间</label>
                         <input class="target-filter-input" id="target-start-at" name="start_at" type="datetime-local" value="{{ target_history.start_at }}">
                     </div>
@@ -397,6 +405,7 @@
         const form = document.getElementById('target-query-form');
         const tableForm = document.getElementById('target-table-form');
         const submitButton = document.getElementById('target-filter-submit');
+        const targetSelect = document.getElementById('target-select');
         const startInput = document.getElementById('target-start-at');
         const endInput = document.getElementById('target-end-at');
         const sampleInput = document.getElementById('target-sample-minutes');
@@ -416,6 +425,9 @@
         }
 
         function getSelectedTarget() {
+            if (targetSelect && targetSelect.value) {
+                return targetSelect.value;
+            }
             const checkedInput = tableForm.querySelector('input[name="selected_target"]:checked');
             return checkedInput ? checkedInput.value : 'lpg_yield';
         }
@@ -424,6 +436,9 @@
             const targetInput = tableForm.querySelector(`input[name="selected_target"][value="${targetKey}"]`);
             if (targetInput) {
                 targetInput.checked = true;
+            }
+            if (targetSelect) {
+                targetSelect.value = targetKey;
             }
         }
 
@@ -604,6 +619,18 @@
         form.addEventListener('submit', function (event) {
             event.preventDefault();
             requestPayload();
+        });
+
+        targetSelect.addEventListener('change', function () {
+            setSelectedTarget(targetSelect.value);
+        });
+
+        tableForm.querySelectorAll('input[name="selected_target"]').forEach((input) => {
+            input.addEventListener('change', function () {
+                if (input.checked) {
+                    setSelectedTarget(input.value);
+                }
+            });
         });
 
         applyPayload(initialPayload);

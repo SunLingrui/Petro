@@ -2,6 +2,182 @@
 
 {% block title %}{{ page_title }}{% endblock %}
 
+{% block styles %}
+{{ super() }}
+<style>
+    .main-query-alert {
+        margin: 0 0 14px;
+        padding: 12px 14px;
+        border-radius: 14px;
+        background: rgba(239, 68, 68, 0.12);
+        border: 1px solid rgba(248, 113, 113, 0.26);
+        color: #991b1b;
+        line-height: 1.5;
+    }
+
+    .main-target-chart-card {
+        background: linear-gradient(180deg, rgba(248, 252, 255, 0.98), rgba(236, 247, 255, 0.96));
+        border-color: rgba(147, 197, 253, 0.42);
+        color: #0f172a;
+    }
+
+    .main-target-heading {
+        justify-content: center;
+        text-align: center;
+    }
+
+    .main-target-heading h3 {
+        margin: 0;
+        color: #0f172a;
+        font-size: 1.9rem;
+        letter-spacing: -0.04em;
+    }
+
+    .main-target-layout {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) 300px;
+        gap: 18px;
+        align-items: start;
+    }
+
+    .main-target-legend {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px 14px;
+        margin-bottom: 12px;
+    }
+
+    .main-target-legend span {
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+        color: #64748b;
+        font-size: 0.78rem;
+        font-weight: 700;
+    }
+
+    .main-target-legend i {
+        width: 11px;
+        height: 11px;
+        border: 2px solid var(--series-color);
+        border-radius: 999px;
+        background: #fff;
+    }
+
+    .main-target-plot {
+        position: relative;
+        height: 360px;
+        padding: 18px 18px 42px 48px;
+        border-radius: 4px;
+        background: rgba(248, 252, 255, 0.98);
+        border: 1px solid rgba(203, 213, 225, 0.8);
+        overflow: hidden;
+    }
+
+    .main-target-plot__frame {
+        position: absolute;
+        inset: 18px 18px 42px 48px;
+    }
+
+    .main-target-grid-line {
+        position: absolute;
+        background: rgba(148, 163, 184, 0.18);
+    }
+
+    .main-target-grid-line--horizontal {
+        left: 0;
+        right: 0;
+        height: 1px;
+    }
+
+    .main-target-grid-line--vertical {
+        top: 0;
+        bottom: 0;
+        width: 1px;
+    }
+
+    .main-target-y-tick,
+    .main-target-x-tick {
+        position: absolute;
+        color: #94a3b8;
+        font-size: 0.76rem;
+        line-height: 1;
+    }
+
+    .main-target-y-tick {
+        left: 0;
+        transform: translate(-100%, -50%);
+    }
+
+    .main-target-x-tick {
+        bottom: 0;
+        transform: translateX(-50%);
+    }
+
+    .main-target-svg {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+    }
+
+    .main-target-svg polyline {
+        fill: none;
+        stroke-width: 3;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+    }
+
+    .main-target-filter {
+        min-height: 280px;
+        padding: 18px;
+        border-radius: 4px;
+        background: rgba(224, 242, 254, 0.72);
+        border: 1px solid rgba(191, 219, 254, 0.72);
+    }
+
+    .main-target-filter .history-toggle {
+        color: #334155;
+        font-weight: 800;
+    }
+
+    .main-target-form {
+        display: grid;
+        gap: 12px;
+    }
+
+    .main-target-input,
+    .main-target-select {
+        width: 100%;
+        min-height: 38px;
+        padding: 0 11px;
+        border-radius: 6px;
+        border: 1px solid rgba(203, 213, 225, 0.78);
+        background: rgba(255, 255, 255, 0.92);
+        color: #334155;
+        font: inherit;
+    }
+
+    .main-target-submit {
+        min-height: 40px;
+        border: 0;
+        border-radius: 8px;
+        background: linear-gradient(135deg, #60a5fa, #2563eb);
+        color: #eff6ff;
+        font: inherit;
+        font-weight: 800;
+        cursor: pointer;
+    }
+
+    .main-target-note {
+        margin: 12px 0 0;
+        color: #64748b;
+        font-size: 0.8rem;
+        line-height: 1.5;
+    }
+</style>
+{% endblock %}
+
 {% block content %}
 <section class="panel main-status-board">
     <div class="main-status-board__header">
@@ -10,6 +186,10 @@
             <h2>RTO首页</h2>
         </div>
     </div>
+
+    {% if influx_error %}
+    <p class="main-query-alert">{{ influx_error }}</p>
+    {% endif %}
 
     <div class="status-grid">
         <article class="status-item">
@@ -93,18 +273,174 @@
     </div>
 </section>
 
-<section class="panel chart-card main-chart-card">
-    <div class="panel-heading">
-        <div>
-            <h3>优化目标曲线图</h3>
-            <p>图表区域先保留为空，后续这里直接接数据库读取的实时优化曲线数据。</p>
-        </div>
+<section class="panel chart-card main-chart-card main-target-chart-card">
+    <div class="panel-heading main-target-heading">
+        <h3 id="main-target-title">{{ main_target_payload.chart.title }}</h3>
     </div>
-    <div class="chart-placeholder main-chart-placeholder">
-        <div class="chart-placeholder__copy">
-            <strong>优化目标曲线图</strong>
-            <p>图表数据接口预留</p>
+
+    <div class="main-target-layout">
+        <div>
+            <div class="main-target-legend" id="main-target-legend"></div>
+            <div class="main-target-plot" id="main-target-plot"></div>
         </div>
+
+        <aside class="main-target-filter">
+            <label class="history-toggle">
+                <input type="checkbox" checked disabled>
+                <span>查询历史</span>
+            </label>
+            <form class="main-target-form" id="main-target-form">
+                <div class="filter-field">
+                    <label for="main-target-select">优化目标</label>
+                    <select class="main-target-select" id="main-target-select" name="target">
+                        {% for option in main_target_payload.target_options %}
+                        <option value="{{ option.key }}" {% if option.selected %}selected{% endif %}>{{ option.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="filter-field">
+                    <label for="main-target-start-at">开始</label>
+                    <input class="main-target-input" id="main-target-start-at" name="start_at" type="datetime-local" value="{{ main_target_payload.history_data.start_at }}">
+                </div>
+                <div class="filter-field">
+                    <label for="main-target-end-at">结束</label>
+                    <input class="main-target-input" id="main-target-end-at" name="end_at" type="datetime-local" value="{{ main_target_payload.history_data.end_at }}">
+                </div>
+                <div class="filter-field">
+                    <label for="main-target-sample-minutes">采样间隔</label>
+                    <select class="main-target-select" id="main-target-sample-minutes" name="sample_minutes">
+                        {% for option in [5, 15, 30, 60, 120] %}
+                        <option value="{{ option }}" {% if main_target_payload.history_data.sample_minutes == option %}selected{% endif %}>{{ option }} min</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <button class="main-target-submit" id="main-target-submit" type="submit">提交查询</button>
+            </form>
+            <p class="main-target-note" id="main-target-note">
+                当前区间: {{ main_target_payload.history_data.start_display }} 至 {{ main_target_payload.history_data.end_display }}
+            </p>
+        </aside>
     </div>
 </section>
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+<script>
+    (function () {
+        const initialPayload = {{ main_target_payload | tojson }};
+        const dataUrl = "{{ url_for('main_target_chart_data') }}";
+        const form = document.getElementById('main-target-form');
+        const targetInput = document.getElementById('main-target-select');
+        const startInput = document.getElementById('main-target-start-at');
+        const endInput = document.getElementById('main-target-end-at');
+        const sampleInput = document.getElementById('main-target-sample-minutes');
+        const submitButton = document.getElementById('main-target-submit');
+        const title = document.getElementById('main-target-title');
+        const legend = document.getElementById('main-target-legend');
+        const plot = document.getElementById('main-target-plot');
+        const note = document.getElementById('main-target-note');
+
+        function renderChart(chart) {
+            const points = Array.isArray(chart && chart.points) ? chart.points : [];
+            const seriesMeta = Array.isArray(chart && chart.series_meta) ? chart.series_meta : [];
+            title.textContent = chart && chart.title ? chart.title : '优化目标曲线图';
+            legend.innerHTML = seriesMeta.map((series) => `<span><i style="--series-color:${series.color}"></i>${series.label}</span>`).join('');
+
+            if (!points.length || !seriesMeta.length) {
+                plot.innerHTML = '<div style="position:absolute; inset:18px 18px 42px 48px; display:grid; place-items:center; text-align:center; color:#64748b;"><div><strong style="display:block; margin-bottom:8px; color:#0f172a;">当前查询区间没有数据</strong><p>请调整开始时间、结束时间或采样间隔后重新查询。</p></div></div>';
+                return;
+            }
+
+            const width = 860;
+            const height = 300;
+            const values = [];
+            points.forEach((point) => seriesMeta.forEach((series) => {
+                if (point[series.field] !== undefined && point[series.field] !== null) {
+                    values.push(Number(point[series.field]));
+                }
+            }));
+
+            const minValue = Math.min(...values);
+            const maxValue = Math.max(...values);
+            const spread = Math.max(maxValue - minValue, Math.abs(maxValue) * 0.08, 0.2);
+            const paddedMin = minValue - spread * 0.18;
+            const paddedMax = maxValue + spread * 0.18;
+            const yRange = paddedMax - paddedMin || 1;
+
+            const gridTicks = Array.from({ length: 6 }, (_, index) => {
+                const ratio = index / 5;
+                const top = ratio * 100;
+                const value = paddedMax - (paddedMax - paddedMin) * ratio;
+                return `<span class="main-target-grid-line main-target-grid-line--horizontal" style="top:${top}%;"></span><span class="main-target-y-tick" style="top:${top}%;">${value.toFixed(2)}</span>`;
+            }).join('');
+
+            const xStep = Math.max(1, Math.ceil(points.length / 7));
+            const xTicks = points.map((point, index) => ({ point, index })).filter(({ index }) => index % xStep === 0 || index === points.length - 1).map(({ point, index }) => {
+                const left = points.length === 1 ? 50 : (index / (points.length - 1)) * 100;
+                return `<span class="main-target-grid-line main-target-grid-line--vertical" style="left:${left}%;"></span><span class="main-target-x-tick" style="left:${left}%;">${point.time_label}</span>`;
+            }).join('');
+
+            const svgLines = seriesMeta.map((series) => {
+                const seriesPoints = [];
+                const circles = [];
+                points.forEach((point, index) => {
+                    if (point[series.field] === undefined || point[series.field] === null) {
+                        return;
+                    }
+                    const x = points.length === 1 ? width / 2 : (index / (points.length - 1)) * width;
+                    const y = height - ((Number(point[series.field]) - paddedMin) / yRange) * height;
+                    seriesPoints.push(`${x.toFixed(2)},${y.toFixed(2)}`);
+                    circles.push(`<circle cx="${x.toFixed(2)}" cy="${y.toFixed(2)}" r="3" stroke="${series.color}" fill="#fff"></circle>`);
+                });
+                return `<polyline stroke="${series.color}" points="${seriesPoints.join(' ')}"></polyline>${circles.join('')}`;
+            }).join('');
+
+            plot.innerHTML = `<div class="main-target-plot__frame">${gridTicks}${xTicks}<svg class="main-target-svg" viewBox="0 0 ${width} ${height}" preserveAspectRatio="none" aria-label="${chart.title}">${svgLines}</svg></div>`;
+        }
+
+        function applyPayload(payload) {
+            if (payload.history_data) {
+                startInput.value = payload.history_data.start_at || startInput.value;
+                endInput.value = payload.history_data.end_at || endInput.value;
+                sampleInput.value = String(payload.history_data.sample_minutes || sampleInput.value);
+                note.textContent = `当前区间: ${payload.history_data.start_display} 至 ${payload.history_data.end_display}`;
+            }
+            if (payload.selected_target) {
+                targetInput.value = payload.selected_target;
+            }
+            renderChart(payload.chart);
+        }
+
+        async function fetchPayload() {
+            const query = new URLSearchParams({
+                target: targetInput.value,
+                start_at: startInput.value,
+                end_at: endInput.value,
+                sample_minutes: sampleInput.value
+            });
+            submitButton.disabled = true;
+            submitButton.textContent = '查询中...';
+            try {
+                const response = await fetch(`${dataUrl}?${query.toString()}`, { credentials: 'same-origin' });
+                const payload = await response.json();
+                if (!response.ok) {
+                    throw new Error(payload.error || `HTTP ${response.status}`);
+                }
+                applyPayload(payload);
+            } catch (error) {
+                plot.innerHTML = `<div style="position:absolute; inset:18px 18px 42px 48px; display:grid; place-items:center; color:#991b1b;">${error.message || '查询失败，请稍后重试。'}</div>`;
+            } finally {
+                submitButton.disabled = false;
+                submitButton.textContent = '提交查询';
+            }
+        }
+
+        form.addEventListener('submit', function (event) {
+            event.preventDefault();
+            fetchPayload();
+        });
+        applyPayload(initialPayload);
+    })();
+</script>
 {% endblock %}
