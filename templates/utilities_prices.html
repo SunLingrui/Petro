@@ -2,6 +2,61 @@
 
 {% block title %}{{ page_title }}{% endblock %}
 
+{% block styles %}
+{{ super() }}
+<style>
+    .market-query-alert {
+        margin: 0 0 14px;
+        padding: 12px 14px;
+        border-radius: 14px;
+        background: rgba(239, 68, 68, 0.12);
+        border: 1px solid rgba(248, 113, 113, 0.26);
+        color: #fecaca;
+        line-height: 1.5;
+    }
+
+    .market-history-form {
+        display: grid;
+        gap: 12px;
+    }
+
+    .market-history-input,
+    .market-history-select {
+        width: 100%;
+        min-height: 42px;
+        padding: 0 12px;
+        border-radius: 12px;
+        border: 1px solid rgba(148, 163, 184, 0.18);
+        background: rgba(255, 255, 255, 0.82);
+        color: #334155;
+        font: inherit;
+    }
+
+    .market-history-submit {
+        min-height: 42px;
+        border: 0;
+        border-radius: 12px;
+        background: linear-gradient(135deg, #60a5fa, #2563eb);
+        color: #eff6ff;
+        font: inherit;
+        font-weight: 700;
+        cursor: pointer;
+    }
+
+    .market-history-submit:disabled {
+        opacity: 0.7;
+        cursor: wait;
+    }
+
+    .market-history-note {
+        margin: 0;
+        color: #475569;
+        font-size: 0.82rem;
+        line-height: 1.5;
+    }
+</style>
+{% endblock %}
+
 {% block content %}
 <section class="panel variable-monitor-page">
     <div class="variable-monitor-titlebar">
@@ -11,93 +66,171 @@
         </div>
     </div>
 
+    {% if influx_error %}
+    <p class="market-query-alert" id="market-query-alert">{{ influx_error }}</p>
+    {% else %}
+    <p class="market-query-alert" id="market-query-alert" hidden></p>
+    {% endif %}
+
     <section class="analytics-chart-block variable-monitor-chart">
         <div class="variable-monitor-chart__header">
-            <h3>公用工程价格变化曲线</h3>
+            <h3 id="market-chart-title">{{ market_payload.chart.title }}</h3>
         </div>
         <div class="variable-monitor-chart__layout">
             <div class="variable-monitor-chart__stage">
-                <div class="variable-monitor-legend">
-                    <span><i style="--series-color:#5b8ff9"></i>中压蒸汽价格</span>
-                    <span><i style="--series-color:#8bd17c"></i>低压蒸汽价格</span>
-                    <span><i style="--series-color:#f6bd16"></i>电价格</span>
-                    <span><i style="--series-color:#ff6b6b"></i>除盐水价格</span>
-                    <span><i style="--series-color:#5ec9f5"></i>循环水价格</span>
-                    <span><i style="--series-color:#37c28b"></i>低温热水价格</span>
-                    <span><i style="--series-color:#ff8c42"></i>污水价格</span>
-                </div>
-
-                <div class="variable-monitor-plot">
-                    <div class="variable-monitor-plot__frame">
-                        <span class="variable-monitor-y-tick" style="top:100%;">0</span>
-                        <span class="variable-monitor-y-tick" style="top:80%;">30</span>
-                        <span class="variable-monitor-y-tick" style="top:60%;">60</span>
-                        <span class="variable-monitor-y-tick" style="top:40%;">90</span>
-                        <span class="variable-monitor-y-tick" style="top:20%;">120</span>
-                        <span class="variable-monitor-y-tick" style="top:0;">148</span>
-
-                        <span class="variable-monitor-grid-line variable-monitor-grid-line--horizontal" style="top:100%;"></span>
-                        <span class="variable-monitor-grid-line variable-monitor-grid-line--horizontal" style="top:80%;"></span>
-                        <span class="variable-monitor-grid-line variable-monitor-grid-line--horizontal" style="top:60%;"></span>
-                        <span class="variable-monitor-grid-line variable-monitor-grid-line--horizontal" style="top:40%;"></span>
-                        <span class="variable-monitor-grid-line variable-monitor-grid-line--horizontal" style="top:20%;"></span>
-                        <span class="variable-monitor-grid-line variable-monitor-grid-line--horizontal" style="top:0;"></span>
-
-                        <span class="variable-monitor-grid-line variable-monitor-grid-line--vertical" style="left:0;"></span>
-                        <span class="variable-monitor-grid-line variable-monitor-grid-line--vertical" style="left:20%;"></span>
-                        <span class="variable-monitor-grid-line variable-monitor-grid-line--vertical" style="left:40%;"></span>
-                        <span class="variable-monitor-grid-line variable-monitor-grid-line--vertical" style="left:60%;"></span>
-                        <span class="variable-monitor-grid-line variable-monitor-grid-line--vertical" style="left:80%;"></span>
-                        <span class="variable-monitor-grid-line variable-monitor-grid-line--vertical" style="left:100%;"></span>
-
-                        <svg class="variable-monitor-svg" viewBox="0 0 860 360" preserveAspectRatio="none" aria-label="公用工程价格变化曲线">
-                            <polyline stroke="#5b8ff9" points="0,360 140,360 175,66 860,66"></polyline>
-                            <polyline stroke="#8bd17c" points="0,360 140,360 175,166 860,166"></polyline>
-                            <polyline stroke="#f6bd16" points="0,360 140,360 175,358.6 860,358.6"></polyline>
-                            <polyline stroke="#ff6b6b" points="0,360 140,360 175,348.2 860,348.2"></polyline>
-                            <polyline stroke="#5ec9f5" points="0,360 140,360 175,359.6 860,359.6"></polyline>
-                            <polyline stroke="#37c28b" points="0,360 140,360 175,356.3 860,356.3"></polyline>
-                            <polyline stroke="#ff8c42" points="0,360 140,360 175,329.5 860,329.5"></polyline>
-                        </svg>
-
-                        <span class="variable-monitor-x-tick" style="left:0;">25</span>
-                        <span class="variable-monitor-x-tick" style="left:20%;">27</span>
-                        <span class="variable-monitor-x-tick" style="left:40%;">29</span>
-                        <span class="variable-monitor-x-tick" style="left:60%;">31</span>
-                        <span class="variable-monitor-x-tick" style="left:80%;">6月</span>
-                        <span class="variable-monitor-x-tick" style="left:100%;">3</span>
-                    </div>
-                </div>
+                <div class="variable-monitor-legend" id="market-chart-legend"></div>
+                <div class="variable-monitor-plot" id="market-chart-plot"></div>
             </div>
 
             <aside class="variable-monitor-history">
                 <div class="variable-monitor-history__topbar">
                     <label class="history-toggle">
-                        <input type="checkbox" {% if history_data.enabled %}checked{% endif %}>
+                        <input type="checkbox" checked disabled>
                         <span>查询历史</span>
                     </label>
-                    <div class="variable-monitor-history__nav"><span>&lsaquo;</span><span>&rsaquo;</span></div>
                 </div>
-                <div class="filter-field">
-                    <label>开始</label>
-                    <div class="variable-monitor-readout">
-                        <span>{{ history_data.start_date }}</span>
-                        <span>{{ history_data.start_time }}</span>
+
+                <form class="market-history-form" id="market-history-form">
+                    <div class="filter-field">
+                        <label for="market-start-at">开始</label>
+                        <input class="market-history-input" id="market-start-at" name="start_at" type="datetime-local" value="{{ market_payload.history_data.start_at }}">
                     </div>
-                </div>
-                <div class="filter-field">
-                    <label>结束</label>
-                    <div class="variable-monitor-readout">
-                        <span>{{ history_data.end_date }}</span>
-                        <span>{{ history_data.end_time }}</span>
+                    <div class="filter-field">
+                        <label for="market-end-at">结束</label>
+                        <input class="market-history-input" id="market-end-at" name="end_at" type="datetime-local" value="{{ market_payload.history_data.end_at }}">
                     </div>
-                </div>
-                <div class="filter-field">
-                    <label>采样间隔</label>
-                    <div class="variable-monitor-readout"><span>{{ history_data.sample_interval }}</span></div>
-                </div>
+                    <div class="filter-field">
+                        <label for="market-sample-minutes">采样间隔</label>
+                        <select class="market-history-select" id="market-sample-minutes" name="sample_minutes">
+                            {% for option in [5, 15, 30, 60, 120] %}
+                            <option value="{{ option }}" {% if market_payload.history_data.sample_minutes == option %}selected{% endif %}>{{ option }} min</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <button class="market-history-submit" id="market-history-submit" type="submit">提交查询</button>
+                </form>
+
+                <p class="market-history-note" id="market-history-note">
+                    当前区间: {{ market_payload.history_data.start_display }} 至 {{ market_payload.history_data.end_display }}
+                </p>
             </aside>
         </div>
     </section>
 </section>
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+<script>
+    (function () {
+        const initialPayload = {{ market_payload | tojson }};
+        const dataUrl = "{{ url_for('utilities_prices_data') }}";
+        const form = document.getElementById('market-history-form');
+        const submitButton = document.getElementById('market-history-submit');
+        const startInput = document.getElementById('market-start-at');
+        const endInput = document.getElementById('market-end-at');
+        const sampleInput = document.getElementById('market-sample-minutes');
+        const legend = document.getElementById('market-chart-legend');
+        const plot = document.getElementById('market-chart-plot');
+        const title = document.getElementById('market-chart-title');
+        const note = document.getElementById('market-history-note');
+        const alertBox = document.getElementById('market-query-alert');
+
+        function setAlert(message) {
+            alertBox.hidden = !message;
+            alertBox.textContent = message || '';
+        }
+
+        function renderChart(chart) {
+            const points = Array.isArray(chart && chart.points) ? chart.points : [];
+            const seriesMeta = Array.isArray(chart && chart.series_meta) ? chart.series_meta : [];
+            title.textContent = chart && chart.title ? chart.title : '公用工程价格变化曲线';
+            legend.innerHTML = seriesMeta.map((series) => `<span><i style="--series-color:${series.color}"></i>${series.label}</span>`).join('');
+
+            if (!points.length || !seriesMeta.length) {
+                plot.innerHTML = '<div class="target-plot__empty" style="position:absolute; inset:18px 18px 42px 48px; display:grid; place-items:center; text-align:center; color:#475569;"><div><strong style="display:block; margin-bottom:8px; color:#0f172a;">当前查询区间没有数据</strong><p>请调整开始时间、结束时间或采样间隔后重新查询。</p></div></div>';
+                return;
+            }
+
+            const width = 860;
+            const height = 300;
+            const values = [];
+            points.forEach((point) => seriesMeta.forEach((series) => {
+                if (point[series.field] !== undefined && point[series.field] !== null) {
+                    values.push(Number(point[series.field]));
+                }
+            }));
+            const minValue = Math.min(...values);
+            const maxValue = Math.max(...values);
+            const spread = Math.max(maxValue - minValue, Math.abs(maxValue) * 0.08, 1);
+            const paddedMin = Math.max(0, minValue - spread * 0.18);
+            const paddedMax = maxValue + spread * 0.18;
+            const yRange = paddedMax - paddedMin || 1;
+
+            const gridTicks = Array.from({ length: 6 }, (_, index) => {
+                const ratio = index / 5;
+                const top = ratio * 100;
+                const value = paddedMax - (paddedMax - paddedMin) * ratio;
+                return `<span class="variable-monitor-grid-line variable-monitor-grid-line--horizontal" style="top:${top}%;"></span><span class="variable-monitor-y-tick" style="top:${top}%;">${value.toFixed(2)}</span>`;
+            }).join('');
+            const xStep = Math.max(1, Math.ceil(points.length / 6));
+            const xTicks = points.map((point, index) => ({ point, index })).filter(({ index }) => index % xStep === 0 || index === points.length - 1).map(({ point, index }) => {
+                const left = points.length === 1 ? 50 : (index / (points.length - 1)) * 100;
+                return `<span class="variable-monitor-grid-line variable-monitor-grid-line--vertical" style="left:${left}%;"></span><span class="variable-monitor-x-tick" style="left:${left}%;">${point.time_label}</span>`;
+            }).join('');
+            const svgLines = seriesMeta.map((series) => {
+                const seriesPoints = [];
+                const circles = [];
+                points.forEach((point, index) => {
+                    if (point[series.field] === undefined || point[series.field] === null) {
+                        return;
+                    }
+                    const x = points.length === 1 ? width / 2 : (index / (points.length - 1)) * width;
+                    const y = height - ((Number(point[series.field]) - paddedMin) / yRange) * height;
+                    seriesPoints.push(`${x.toFixed(2)},${y.toFixed(2)}`);
+                    circles.push(`<circle cx="${x.toFixed(2)}" cy="${y.toFixed(2)}" r="3.2" stroke="${series.color}" fill="#ffffff"></circle>`);
+                });
+                return `<polyline stroke="${series.color}" points="${seriesPoints.join(' ')}"></polyline>${circles.join('')}`;
+            }).join('');
+            plot.innerHTML = `<div class="variable-monitor-plot__frame">${gridTicks}${xTicks}<svg class="variable-monitor-svg" viewBox="0 0 ${width} ${height}" preserveAspectRatio="none" aria-label="${chart.title}">${svgLines}</svg></div>`;
+        }
+
+        function applyPayload(payload) {
+            if (payload.history_data) {
+                startInput.value = payload.history_data.start_at || startInput.value;
+                endInput.value = payload.history_data.end_at || endInput.value;
+                sampleInput.value = String(payload.history_data.sample_minutes || sampleInput.value);
+                note.textContent = `当前区间: ${payload.history_data.start_display} 至 ${payload.history_data.end_display}`;
+            }
+            renderChart(payload.chart);
+            setAlert(payload.error || '');
+        }
+
+        async function fetchPayload() {
+            const query = new URLSearchParams({ start_at: startInput.value, end_at: endInput.value, sample_minutes: sampleInput.value });
+            submitButton.disabled = true;
+            submitButton.textContent = '查询中...';
+            setAlert('');
+            try {
+                const response = await fetch(`${dataUrl}?${query.toString()}`, { credentials: 'same-origin' });
+                const payload = await response.json();
+                if (!response.ok) {
+                    throw new Error(payload.error || `HTTP ${response.status}`);
+                }
+                applyPayload(payload);
+            } catch (error) {
+                setAlert(error.message || '查询失败，请稍后重试。');
+            } finally {
+                submitButton.disabled = false;
+                submitButton.textContent = '提交查询';
+            }
+        }
+
+        form.addEventListener('submit', function (event) {
+            event.preventDefault();
+            fetchPayload();
+        });
+        applyPayload(initialPayload);
+    })();
+</script>
 {% endblock %}

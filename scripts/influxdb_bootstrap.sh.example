@@ -2,9 +2,9 @@
 set -euo pipefail
 
 export INFLUX_HOST="${INFLUX_HOST:-http://127.0.0.1:8086}"
-export INFLUX_ORG="${INFLUX_ORG:-Petro}"
-export INFLUX_TOKEN="${INFLUX_TOKEN:-ydxUZa7VyfLoc5k8GV2jFCOxZjJUgrkhgW4QXvgAPnnft8Btirv9R1fa-TMjNAOIUrU-2su80D7Yb7W9dR3zuQ==}"
+export INFLUX_ORG="${INFLUX_ORG:-Patro}"
 export INFLUX_BUCKET="${INFLUX_BUCKET:-rto_mock_dev}"
+: "${INFLUX_TOKEN:?请先 export INFLUX_TOKEN=ydxUZa7VyfLoc5k8GV2jFCOxZjJUgrkhgW4QXvgAPnnft8Btirv9R1fa-TMjNAOIUrU-2su80D7Yb7W9dR3zuQ==}"
 
 if ! influx config list | grep -q '[[:space:]]local-rto[[:space:]]'; then
   influx config create \

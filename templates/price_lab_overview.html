@@ -2,6 +2,21 @@
 
 {% block title %}{{ page_title }}{% endblock %}
 
+{% block styles %}
+{{ super() }}
+<style>
+    .overview-query-alert {
+        margin: 0 0 14px;
+        padding: 12px 14px;
+        border-radius: 14px;
+        background: rgba(239, 68, 68, 0.12);
+        border: 1px solid rgba(248, 113, 113, 0.26);
+        color: #fecaca;
+        line-height: 1.5;
+    }
+</style>
+{% endblock %}
+
 {% block content %}
 <section class="panel target-page overview-blue-page">
     <div class="overview-blue-page__header">
@@ -10,6 +25,10 @@
             <h2>价格与化验分析总览</h2>
         </div>
     </div>
+
+    {% if influx_error %}
+    <p class="overview-query-alert">{{ influx_error }}</p>
+    {% endif %}
 
     <div class="overview-blue-layout">
         <section class="overview-blue-card">

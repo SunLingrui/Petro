@@ -7,9 +7,20 @@ from . import app, db
 from .models import User
 from .services.influx_service import (
     InfluxQueryError,
+    build_empty_market_price_chart_payload,
+    build_empty_optimization_variables_payload,
     build_empty_optimization_target_payload,
+    build_empty_price_lab_overview_payload,
+    build_empty_raw_product_prices_payload,
+    build_empty_variable_detail_payload,
+    get_market_price_chart_payload,
+    get_optimization_variables_payload,
     get_import_payload,
     get_optimization_target_payload,
+    get_price_lab_overview_payload,
+    get_raw_product_prices_payload,
+    get_variable_detail_payload,
+    get_variable_key_by_slug,
 )
 
 
@@ -39,6 +50,35 @@ def get_current_user():
     if not username:
         return None
     return User.query.filter(User.name == username).first()
+
+
+def render_variable_detail_page(variable_key, page_title, active_page):
+    requested_start = request.args.get("start_at")
+    requested_end = request.args.get("end_at")
+    requested_sample = request.args.get("sample_minutes")
+
+    try:
+        payload = get_variable_detail_payload(
+            variable_key=variable_key,
+            start_local=requested_start,
+            end_local=requested_end,
+            sample_minutes=requested_sample,
+        )
+        influx_error = None
+    except InfluxQueryError as exc:
+        influx_error = str(exc)
+        payload = build_empty_variable_detail_payload(variable_key=variable_key, error_message=influx_error)
+
+    return render_system_template(
+        "variable_detail.html",
+        page_title,
+        active_page,
+        variable_payload=payload,
+        monitor_data=payload["monitor_data"],
+        monitor_cards=payload["monitor_cards"],
+        history_data=payload["history_data"],
+        influx_error=influx_error,
+    )
 
 
 @app.route("/")
@@ -336,351 +376,252 @@ def rto_operation():
 @app.route("/rto/optimization-variables")
 @login_required
 def optimization_variables():
-    variable_form = {
-        "reactor_temperature": {
-            "tag": "150TIC1090",
-            "current_value": "520.5126",
-            "unit": "℃",
-            "upper_optimized_value": "522.25",
-            "optimized_value": "520.5274",
-            "delta_vs_output": "-1.4318",
-            "current_step": "0.3000",
-            "max_step": "1.0000",
-            "output_setpoint": "521.9592",
-            "push_enabled": True,
-        },
-        "catalyst_oil_ratio": {
-            "tag": "150YLYQH",
-            "current_value": "8.9275",
-            "unit": "",
-            "upper_optimized_value": "9.2111",
-            "optimized_value": "8.9452",
-            "delta_vs_output": "-0.0203",
-            "current_step": "0.0500",
-            "max_step": "0.3000",
-            "output_setpoint": "8.9452",
-            "push_enabled": True,
-        },
-        "regenerator_temperature": {
-            "tag": "150TI1082",
-            "current_value": "679.6999",
-            "unit": "℃",
-            "upper_optimized_value": "676.2",
-            "optimized_value": "679.5676",
-            "delta_vs_output": "0.6676",
-            "current_step": "0.3000",
-            "max_step": "1.0000",
-            "output_setpoint": "679.2",
-            "push_enabled": True,
-        },
-        "feed_preheat_temperature": {
-            "tag": "150TIC2006",
-            "current_value": "232.2645",
-            "unit": "℃",
-            "upper_optimized_value": "234.9",
-            "optimized_value": "234.9",
-            "delta_vs_output": "",
-            "current_step": "",
-            "max_step": "",
-            "output_setpoint": "",
-            "push_enabled": False,
-        },
-    }
+    try:
+        payload = get_optimization_variables_payload()
+        influx_error = None
+    except InfluxQueryError as exc:
+        influx_error = str(exc)
+        payload = build_empty_optimization_variables_payload(error_message=influx_error)
+
     return render_system_template(
         "optimization_variables.html",
         "优化变量监测",
         "optimization_variables",
-        variable_form=variable_form,
+        variable_rows=payload["variable_rows"],
+        influx_error=influx_error,
     )
 
 
 @app.route("/rto/variables/reactor-temperature")
 @login_required
 def reactor_temperature():
-    monitor_data = {
-        "push_enabled": True,
-        "apc_status": "未接受",
-        "apc_status_class": "state-danger",
-        "current_value": "520.3295",
-        "optimized_value": "520.5274",
-        "model_value": "522.25",
-        "feedback_value": "520.5274",
-        "output_setpoint": "521.9592",
-        "delta_vs_output": "-1.4318",
-        "lower_limit": "518.5000",
-        "upper_limit": "522.3000",
-        "current_step": "0.3000",
-        "max_step": "1.0000",
-        "apc_lower_limit": "520.5",
-        "apc_upper_limit": "522.5",
-        "dcs_lower_limit": "0",
-        "dcs_upper_limit": "600",
-    }
-    history_data = {
-        "enabled": False,
-        "start_date": "2026-04-18",
-        "start_time": "14:51:37",
-        "end_date": "2026-04-25",
-        "end_time": "14:51:45",
-        "sample_interval": "30 min",
-    }
-    return render_system_template(
-        "reactor_temperature.html",
-        "反应温度监测",
-        "reactor_temperature",
-        monitor_data=monitor_data,
-        history_data=history_data,
-    )
+    return render_variable_detail_page("reactor_temperature", "反应温度监测", "reactor_temperature")
 
 
 @app.route("/rto/variables/catalyst-oil-ratio")
 @login_required
 def catalyst_oil_ratio():
-    monitor_data = {
-        "push_enabled": False,
-        "apc_status": "null",
-        "apc_status_class": "",
-        "current_value": "8.9275",
-        "optimized_value": "8.9452",
-        "model_value": "8.9483",
-        "feedback_value": "9.1072",
-        "output_setpoint": "8.9655",
-        "delta_vs_output": "-0.0203",
-        "lower_limit": "8.6000",
-        "upper_limit": "9.2000",
-        "current_step": "0.0500",
-        "max_step": "0.3000",
-        "apc_lower_limit": "8.5000",
-        "apc_upper_limit": "10.0000",
-        "dcs_lower_limit": "0",
-        "dcs_upper_limit": "20",
-    }
-    history_data = {
-        "enabled": True,
-        "start_date": "2026-01-01",
-        "start_time": "08:54:07",
-        "end_date": "2026-04-17",
-        "end_time": "08:54:07",
-        "sample_interval": "30 min",
-    }
-    return render_system_template(
-        "catalyst_oil_ratio.html",
-        "剂油比监测",
-        "catalyst_oil_ratio",
-        monitor_data=monitor_data,
-        history_data=history_data,
-    )
+    return render_variable_detail_page("catalyst_oil_ratio", "剂油比监测", "catalyst_oil_ratio")
 
 
 @app.route("/rto/variables/regenerator-temperature")
 @login_required
 def regenerator_temperature():
-    monitor_data = {
-        "push_enabled": True,
-        "apc_status": "未接受",
-        "apc_status_class": "state-danger",
-        "current_value": "679.1437",
-        "optimized_value": "679.5676",
-        "model_value": "676.2",
-        "feedback_value": "679.5676",
-        "output_setpoint": "679.2",
-        "delta_vs_output": "0.6676",
-        "lower_limit": "675.0000",
-        "upper_limit": "682.0000",
-        "current_step": "0.3000",
-        "max_step": "1.0000",
-        "apc_lower_limit": "676",
-        "apc_upper_limit": "681",
-        "dcs_lower_limit": "0",
-        "dcs_upper_limit": "1000",
-    }
-    history_data = {
-        "enabled": False,
-        "start_date": "2026-04-18",
-        "start_time": "14:52:47",
-        "end_date": "2026-04-25",
-        "end_time": "14:52:47",
-        "sample_interval": "30 min",
-    }
-    return render_system_template(
-        "regenerator_temperature.html",
-        "再生温度监测",
-        "regenerator_temperature",
-        monitor_data=monitor_data,
-        history_data=history_data,
-    )
+    return render_variable_detail_page("regenerator_temperature", "再生温度监测", "regenerator_temperature")
 
 
 @app.route("/rto/variables/feed-preheat-temperature")
 @login_required
 def feed_preheat_temperature():
-    monitor_data = {
-        "current_value": "0",
-        "optimized_value": "0",
-        "model_value": "250",
-        "feedback_value": "0",
-        "lower_limit": "0.0000",
-        "upper_limit": "0.0000",
-    }
-    history_data = {
-        "enabled": True,
-        "start_date": "2026-01-01",
-        "start_time": "08:54:53",
-        "end_date": "2026-04-17",
-        "end_time": "08:54:53",
-        "sample_interval": "30 min",
-    }
-    return render_system_template(
-        "feed_preheat_temperature.html",
-        "原料预热温度监测",
-        "feed_preheat_temperature",
-        monitor_data=monitor_data,
-        history_data=history_data,
-    )
+    return render_variable_detail_page("feed_preheat_temperature", "原料预热温度监测", "feed_preheat_temperature")
+
+
+@app.route("/rto/variables/<variable_slug>/data")
+@login_required
+def variable_detail_data(variable_slug):
+    variable_key = get_variable_key_by_slug(variable_slug)
+    if not variable_key:
+        return jsonify({"error": "未找到对应的优化变量"}), 404
+
+    try:
+        payload = get_variable_detail_payload(
+            variable_key=variable_key,
+            start_local=request.args.get("start_at"),
+            end_local=request.args.get("end_at"),
+            sample_minutes=request.args.get("sample_minutes"),
+        )
+    except InfluxQueryError as exc:
+        return jsonify({"error": str(exc)}), 502
+    return jsonify(payload)
 
 
 @app.route("/analytics/overview")
 @login_required
 def price_lab_overview():
-    overview_tables = {
-        "raw_materials": [
-            {"name": "重油新鲜进料", "value": "3781.0000", "unit": "元/吨"},
-            {"name": "重芳烃", "value": "4552.0000", "unit": "元/吨"},
-        ],
-        "products": [
-            {"name": "干气", "value": "1500.0000", "unit": "元/吨"},
-            {"name": "液化气", "value": "4359.0000", "unit": "元/吨"},
-            {"name": "汽油", "value": "4843.0000", "unit": "元/吨"},
-            {"name": "重石脑油", "value": "4456.0000", "unit": "元/吨"},
-            {"name": "柴油", "value": "4456.0000", "unit": "元/吨"},
-            {"name": "油浆", "value": "2615.0000", "unit": "元/吨"},
-        ],
-        "utilities": [
-            {"name": "中压蒸汽", "value": "248.0000", "unit": "元/吨"},
-            {"name": "低压蒸汽", "value": "97.0000", "unit": "元/吨"},
-            {"name": "电", "value": "0.5900", "unit": "元/kWh"},
-            {"name": "除盐水", "value": "4.8800", "unit": "元/吨"},
-            {"name": "循环水", "value": "0.1600", "unit": "元/吨"},
-            {"name": "低温热水", "value": "0.5000", "unit": "元/吨"},
-            {"name": "污水", "value": "12.5000", "unit": "元/吨"},
-        ],
-        "feed_lab": [
-            {"name": "混合进料密度", "value": "925.0000", "unit": "kg/m³"},
-            {"name": "混合进料残炭", "value": "5.7000", "unit": "wt%"},
-        ],
-        "product_lab": [
-            {"name": "汽油产品密度", "value": "725.0000", "unit": "kg/m³"},
-            {"name": "汽油产品终馏点", "value": "180.0000", "unit": "℃"},
-            {"name": "柴油产品密度", "value": "920.0000", "unit": "kg/m³"},
-            {"name": "柴油产品95%点", "value": "360.0000", "unit": "℃"},
-        ],
-        "costs": [
-            {"name": "原料成本", "value": "3815.2000", "unit": "元/吨"},
-            {"name": "加工成本", "value": "126.5000", "unit": "元/吨"},
-            {"name": "能耗成本", "value": "48.9600", "unit": "元/吨"},
-            {"name": "综合成本", "value": "3990.6600", "unit": "元/吨"},
-        ],
-    }
+    try:
+        payload = get_price_lab_overview_payload()
+        influx_error = None
+    except InfluxQueryError as exc:
+        influx_error = str(exc)
+        payload = build_empty_price_lab_overview_payload(error_message=influx_error)
+
     return render_system_template(
         "price_lab_overview.html",
         "价格与化验分析总览",
         "price_lab_overview",
-        overview_tables=overview_tables,
+        overview_tables=payload["overview_tables"],
+        influx_error=influx_error,
     )
 
 
 @app.route("/analytics/raw-product-prices")
 @login_required
 def raw_product_prices():
-    raw_chart_history = {
-        "enabled": True,
-        "start_date": "2026-01-01",
-        "start_time": "08:49:36",
-        "end_date": "2026-04-07",
-        "end_time": "08:49:42",
-        "sample_interval": "30 min",
-    }
-    product_chart_history = {
-        "enabled": True,
-        "start_date": "2026-01-01",
-        "start_time": "08:49:36",
-        "end_date": "2026-04-17",
-        "end_time": "08:50:07",
-        "sample_interval": "30 min",
-    }
+    requested_start = request.args.get("start_at")
+    requested_end = request.args.get("end_at")
+    requested_sample = request.args.get("sample_minutes")
+
+    try:
+        payload = get_raw_product_prices_payload(
+            start_local=requested_start,
+            end_local=requested_end,
+            sample_minutes=requested_sample,
+        )
+        influx_error = None
+    except InfluxQueryError as exc:
+        influx_error = str(exc)
+        payload = build_empty_raw_product_prices_payload(error_message=influx_error)
+
     return render_system_template(
         "raw_product_prices.html",
         "原料和产品价格",
         "raw_product_prices",
-        raw_chart_history=raw_chart_history,
-        product_chart_history=product_chart_history,
+        raw_product_payload=payload,
+        influx_error=influx_error,
     )
+
+
+@app.route("/analytics/raw-product-prices/data")
+@login_required
+def raw_product_prices_data():
+    try:
+        payload = get_market_price_chart_payload(
+            metric_group=request.args.get("group"),
+            start_local=request.args.get("start_at"),
+            end_local=request.args.get("end_at"),
+            sample_minutes=request.args.get("sample_minutes"),
+        )
+    except InfluxQueryError as exc:
+        return jsonify({"error": str(exc)}), 502
+    return jsonify(payload)
 
 
 @app.route("/analytics/utilities-prices")
 @login_required
 def utilities_prices():
-    history_data = {
-        "enabled": True,
-        "start_date": "2026-01-01",
-        "start_time": "08:51:43",
-        "end_date": "2026-04-17",
-        "end_time": "08:51:43",
-        "sample_interval": "30 min",
-    }
+    try:
+        payload = get_market_price_chart_payload(
+            metric_group="utility",
+            start_local=request.args.get("start_at"),
+            end_local=request.args.get("end_at"),
+            sample_minutes=request.args.get("sample_minutes"),
+        )
+        influx_error = None
+    except InfluxQueryError as exc:
+        influx_error = str(exc)
+        payload = build_empty_market_price_chart_payload("utility", error_message=influx_error)
+
     return render_system_template(
         "utilities_prices.html",
         "公用工程价格",
         "utilities_prices",
-        history_data=history_data,
+        market_payload=payload,
+        influx_error=influx_error,
     )
+
+
+@app.route("/analytics/utilities-prices/data")
+@login_required
+def utilities_prices_data():
+    try:
+        payload = get_market_price_chart_payload(
+            metric_group="utility",
+            start_local=request.args.get("start_at"),
+            end_local=request.args.get("end_at"),
+            sample_minutes=request.args.get("sample_minutes"),
+        )
+    except InfluxQueryError as exc:
+        return jsonify({"error": str(exc)}), 502
+    return jsonify(payload)
 
 
 @app.route("/analytics/lab-analysis")
 @login_required
 def lab_analysis():
-    feed_history_data = {
-        "enabled": True,
-        "start_date": "2026-01-01",
-        "start_time": "08:52:25",
-        "end_date": "2026-04-17",
-        "end_time": "08:52:25",
-        "sample_interval": "30 min",
-    }
-    product_history_data = {
-        "enabled": True,
-        "start_date": "2026-01-01",
-        "start_time": "08:52:25",
-        "end_date": "2026-04-17",
-        "end_time": "08:53:18",
-        "sample_interval": "30 min",
-    }
+    try:
+        payload = {
+            "feed_lab": get_market_price_chart_payload(
+                metric_group="feed_lab",
+                start_local=request.args.get("start_at"),
+                end_local=request.args.get("end_at"),
+                sample_minutes=request.args.get("sample_minutes"),
+            ),
+            "product_lab": get_market_price_chart_payload(
+                metric_group="product_lab",
+                start_local=request.args.get("start_at"),
+                end_local=request.args.get("end_at"),
+                sample_minutes=request.args.get("sample_minutes"),
+            ),
+        }
+        influx_error = None
+    except InfluxQueryError as exc:
+        influx_error = str(exc)
+        payload = {
+            "feed_lab": build_empty_market_price_chart_payload("feed_lab", error_message=influx_error),
+            "product_lab": build_empty_market_price_chart_payload("product_lab", error_message=influx_error),
+        }
+
     return render_system_template(
         "lab_analysis.html",
         "化验分析数据",
         "lab_analysis",
-        feed_history_data=feed_history_data,
-        product_history_data=product_history_data,
+        lab_payload=payload,
+        influx_error=influx_error,
     )
+
+
+@app.route("/analytics/lab-analysis/data")
+@login_required
+def lab_analysis_data():
+    try:
+        payload = get_market_price_chart_payload(
+            metric_group=request.args.get("group"),
+            start_local=request.args.get("start_at"),
+            end_local=request.args.get("end_at"),
+            sample_minutes=request.args.get("sample_minutes"),
+        )
+    except InfluxQueryError as exc:
+        return jsonify({"error": str(exc)}), 502
+    return jsonify(payload)
 
 
 @app.route("/analytics/cost-prices")
 @login_required
 def cost_prices():
-    history_data = {
-        "enabled": True,
-        "start_date": "2026-01-01",
-        "start_time": "08:55:12",
-        "end_date": "2026-04-17",
-        "end_time": "08:55:12",
-        "sample_interval": "30 min",
-    }
+    try:
+        payload = get_market_price_chart_payload(
+            metric_group="cost",
+            start_local=request.args.get("start_at"),
+            end_local=request.args.get("end_at"),
+            sample_minutes=request.args.get("sample_minutes"),
+        )
+        influx_error = None
+    except InfluxQueryError as exc:
+        influx_error = str(exc)
+        payload = build_empty_market_price_chart_payload("cost", error_message=influx_error)
+
     return render_system_template(
         "cost_prices.html",
         "成本价格",
         "cost_prices",
-        history_data=history_data,
+        market_payload=payload,
+        influx_error=influx_error,
     )
+
+
+@app.route("/analytics/cost-prices/data")
+@login_required
+def cost_prices_data():
+    try:
+        payload = get_market_price_chart_payload(
+            metric_group="cost",
+            start_local=request.args.get("start_at"),
+            end_local=request.args.get("end_at"),
+            sample_minutes=request.args.get("sample_minutes"),
+        )
+    except InfluxQueryError as exc:
+        return jsonify({"error": str(exc)}), 502
+    return jsonify(payload)
 
 
 @app.route("/system/parameter-settings")

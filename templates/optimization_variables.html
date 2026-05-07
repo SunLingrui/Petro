@@ -83,6 +83,32 @@
         width: 1460px;
         min-width: 1460px;
     }
+
+    .variable-query-alert {
+        margin: 0 0 14px;
+        padding: 12px 14px;
+        border-radius: 14px;
+        background: rgba(239, 68, 68, 0.12);
+        border: 1px solid rgba(248, 113, 113, 0.26);
+        color: #fecaca;
+        line-height: 1.5;
+    }
+
+    .variable-name-link {
+        color: #bfdbfe;
+        font-weight: 700;
+        text-decoration: none;
+    }
+
+    .variable-name-link:hover {
+        color: #ffffff;
+    }
+
+    .table-input--readonly {
+        background: rgba(148, 163, 184, 0.08);
+        color: #dbeafe;
+        cursor: default;
+    }
 </style>
 {% endblock %}
 
@@ -94,6 +120,10 @@
             <h2>RTO优化变量</h2>
         </div>
     </div>
+
+    {% if influx_error %}
+    <p class="variable-query-alert">{{ influx_error }}</p>
+    {% endif %}
 
     <div class="panel table-panel target-table-panel variable-table-panel">
         <div class="panel-heading target-panel-heading">
@@ -127,78 +157,26 @@
                         </tr>
                     </thead>
                     <tbody>
+                        {% for row in variable_rows %}
                         <tr>
-                            <td>反应温度</td>
-                            <td>{{ variable_form.reactor_temperature.tag }}</td>
-                            <td>{{ variable_form.reactor_temperature.current_value }}</td>
-                            <td>{{ variable_form.reactor_temperature.unit }}</td>
-                            <td>{{ variable_form.reactor_temperature.upper_optimized_value }}</td>
-                            <td>{{ variable_form.reactor_temperature.optimized_value }}</td>
-                            <td>{{ variable_form.reactor_temperature.delta_vs_output }}</td>
-                            <td><input class="table-input table-input--compact" type="text" name="reactor_temperature_current_step" value="{{ variable_form.reactor_temperature.current_step }}"></td>
-                            <td><input class="table-input table-input--compact" type="text" name="reactor_temperature_max_step" value="{{ variable_form.reactor_temperature.max_step }}"></td>
-                            <td><input class="table-input table-input--compact" type="text" name="reactor_temperature_output_setpoint" value="{{ variable_form.reactor_temperature.output_setpoint }}"></td>
+                            <td><a class="variable-name-link" href="{{ url_for(row.detail_url_key) }}">{{ row.name }}</a></td>
+                            <td>{{ row.tag }}</td>
+                            <td>{{ row.current_value }}</td>
+                            <td>{{ row.unit }}</td>
+                            <td>{{ row.last_optimized_value }}</td>
+                            <td>{{ row.optimized_value }}</td>
+                            <td>{{ row.delta_vs_output }}</td>
+                            <td><input class="table-input table-input--compact table-input--readonly" type="text" value="{{ row.current_step }}" readonly></td>
+                            <td><input class="table-input table-input--compact table-input--readonly" type="text" value="{{ row.max_step }}" readonly></td>
+                            <td><input class="table-input table-input--compact table-input--readonly" type="text" value="{{ row.output_setpoint }}" readonly></td>
                             <td>
                                 <label class="table-switch">
-                                    <input type="checkbox" name="reactor_temperature_push_enabled" {% if variable_form.reactor_temperature.push_enabled %}checked{% endif %}>
+                                    <input type="checkbox" {% if row.push_enabled %}checked{% endif %} disabled>
                                     <span class="table-switch__track"><span class="table-switch__thumb"></span></span>
                                 </label>
                             </td>
                         </tr>
-                        <tr>
-                            <td>剂油比</td>
-                            <td>{{ variable_form.catalyst_oil_ratio.tag }}</td>
-                            <td>{{ variable_form.catalyst_oil_ratio.current_value }}</td>
-                            <td>{{ variable_form.catalyst_oil_ratio.unit }}</td>
-                            <td>{{ variable_form.catalyst_oil_ratio.upper_optimized_value }}</td>
-                            <td>{{ variable_form.catalyst_oil_ratio.optimized_value }}</td>
-                            <td>{{ variable_form.catalyst_oil_ratio.delta_vs_output }}</td>
-                            <td><input class="table-input table-input--compact" type="text" name="catalyst_oil_ratio_current_step" value="{{ variable_form.catalyst_oil_ratio.current_step }}"></td>
-                            <td><input class="table-input table-input--compact" type="text" name="catalyst_oil_ratio_max_step" value="{{ variable_form.catalyst_oil_ratio.max_step }}"></td>
-                            <td><input class="table-input table-input--compact" type="text" name="catalyst_oil_ratio_output_setpoint" value="{{ variable_form.catalyst_oil_ratio.output_setpoint }}"></td>
-                            <td>
-                                <label class="table-switch">
-                                    <input type="checkbox" name="catalyst_oil_ratio_push_enabled" {% if variable_form.catalyst_oil_ratio.push_enabled %}checked{% endif %}>
-                                    <span class="table-switch__track"><span class="table-switch__thumb"></span></span>
-                                </label>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>再生温度</td>
-                            <td>{{ variable_form.regenerator_temperature.tag }}</td>
-                            <td>{{ variable_form.regenerator_temperature.current_value }}</td>
-                            <td>{{ variable_form.regenerator_temperature.unit }}</td>
-                            <td>{{ variable_form.regenerator_temperature.upper_optimized_value }}</td>
-                            <td>{{ variable_form.regenerator_temperature.optimized_value }}</td>
-                            <td>{{ variable_form.regenerator_temperature.delta_vs_output }}</td>
-                            <td><input class="table-input table-input--compact" type="text" name="regenerator_temperature_current_step" value="{{ variable_form.regenerator_temperature.current_step }}"></td>
-                            <td><input class="table-input table-input--compact" type="text" name="regenerator_temperature_max_step" value="{{ variable_form.regenerator_temperature.max_step }}"></td>
-                            <td><input class="table-input table-input--compact" type="text" name="regenerator_temperature_output_setpoint" value="{{ variable_form.regenerator_temperature.output_setpoint }}"></td>
-                            <td>
-                                <label class="table-switch">
-                                    <input type="checkbox" name="regenerator_temperature_push_enabled" {% if variable_form.regenerator_temperature.push_enabled %}checked{% endif %}>
-                                    <span class="table-switch__track"><span class="table-switch__thumb"></span></span>
-                                </label>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>原料预热温度</td>
-                            <td>{{ variable_form.feed_preheat_temperature.tag }}</td>
-                            <td>{{ variable_form.feed_preheat_temperature.current_value }}</td>
-                            <td>{{ variable_form.feed_preheat_temperature.unit }}</td>
-                            <td>{{ variable_form.feed_preheat_temperature.upper_optimized_value }}</td>
-                            <td>{{ variable_form.feed_preheat_temperature.optimized_value }}</td>
-                            <td>{{ variable_form.feed_preheat_temperature.delta_vs_output }}</td>
-                            <td><input class="table-input table-input--compact" type="text" name="feed_preheat_temperature_current_step" value="{{ variable_form.feed_preheat_temperature.current_step }}"></td>
-                            <td><input class="table-input table-input--compact" type="text" name="feed_preheat_temperature_max_step" value="{{ variable_form.feed_preheat_temperature.max_step }}"></td>
-                            <td><input class="table-input table-input--compact" type="text" name="feed_preheat_temperature_output_setpoint" value="{{ variable_form.feed_preheat_temperature.output_setpoint }}"></td>
-                            <td>
-                                <label class="table-switch">
-                                    <input type="checkbox" name="feed_preheat_temperature_push_enabled" {% if variable_form.feed_preheat_temperature.push_enabled %}checked{% endif %}>
-                                    <span class="table-switch__track"><span class="table-switch__thumb"></span></span>
-                                </label>
-                            </td>
-                        </tr>
+                        {% endfor %}
                     </tbody>
                 </table>
             </form>

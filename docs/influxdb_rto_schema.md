@@ -60,16 +60,22 @@ influx bucket create --name rto_mock_dev --org "$INFLUX_ORG"
 推荐 fields:
 
 - `current_value`
+- `last_optimized_value`
 - `optimized_value`
 - `model_value`
 - `feedback_value`
 - `output_setpoint`
+- `delta_vs_output`
 - `lower_limit`
 - `upper_limit`
-- `apc_lower_limit`
-- `apc_upper_limit`
 - `current_step`
 - `max_step`
+- `apc_lower_limit`
+- `apc_upper_limit`
+- `dcs_lower_limit`
+- `dcs_upper_limit`
+- `push_enabled`
+- `apc_status`
 
 ### `market_metric_values`
 
@@ -84,6 +90,41 @@ influx bucket create --name rto_mock_dev --org "$INFLUX_ORG"
 推荐 fields:
 
 - `value`
+
+原料和产品价格当前使用的 `metric_key`:
+
+| metric_group | metric_key | 名称 | 单位 |
+| --- | --- | --- | --- |
+| `raw_material` | `raw_heavy_feed_price` | 重油新鲜进料价格 | 元/吨 |
+| `raw_material` | `heavy_aromatics_price` | 重芳烃价格 | 元/吨 |
+| `product` | `dry_gas_price` | 干气价格 | 元/吨 |
+| `product` | `lpg_price` | 液化气价格 | 元/吨 |
+| `product` | `gasoline_price` | 汽油价格 | 元/吨 |
+| `product` | `heavy_naphtha_price` | 重石脑油价格 | 元/吨 |
+| `product` | `diesel_price` | 柴油价格 | 元/吨 |
+| `product` | `slurry_price` | 油浆价格 | 元/吨 |
+
+公用工程、化验、成本当前使用的 `metric_key`:
+
+| metric_group | metric_key | 名称 | 单位 |
+| --- | --- | --- | --- |
+| `utility` | `medium_pressure_steam_price` | 中压蒸汽 | 元/吨 |
+| `utility` | `low_pressure_steam_price` | 低压蒸汽 | 元/吨 |
+| `utility` | `electricity_price` | 电 | 元/kWh |
+| `utility` | `desalted_water_price` | 除盐水 | 元/吨 |
+| `utility` | `circulating_water_price` | 循环水 | 元/吨 |
+| `utility` | `hot_water_price` | 低温热水 | 元/吨 |
+| `utility` | `wastewater_price` | 污水 | 元/吨 |
+| `feed_lab` | `mixed_feed_density` | 混合进料密度 | kg/m³ |
+| `feed_lab` | `mixed_feed_carbon_residue` | 混合进料残炭 | wt% |
+| `product_lab` | `gasoline_density` | 汽油产品密度 | kg/m³ |
+| `product_lab` | `gasoline_fbp` | 汽油产品终馏点 | ℃ |
+| `product_lab` | `diesel_density` | 柴油产品密度 | kg/m³ |
+| `product_lab` | `diesel_95pct_point` | 柴油产品95%点 | ℃ |
+| `cost` | `feed_cost` | 原料成本 | 元/吨 |
+| `cost` | `processing_cost` | 加工成本 | 元/吨 |
+| `cost` | `energy_cost` | 能耗成本 | 元/吨 |
+| `cost` | `total_cost` | 综合成本 | 元/吨 |
 
 ### `rto_runtime_status`
 
@@ -125,11 +166,24 @@ influx bucket create --name rto_mock_dev --org "$INFLUX_ORG"
 写入命令:
 
 ```bash
+python3 /Users/andy/Desktop/实习/Web/scripts/generate_rto_seed.py
+
 influx write \
   --bucket rto_mock_dev \
   --org "$INFLUX_ORG" \
   --precision s \
   --file /Users/andy/Desktop/实习/Web/data/rto_seed.lp
+```
+
+也可以直接使用脚本生成并导入:
+
+```bash
+export INFLUX_HOST="http://127.0.0.1:8086"
+export INFLUX_ORG="Patro"
+export INFLUX_TOKEN="你的真实 token"
+export INFLUX_BUCKET="rto_mock_dev"
+
+bash /Users/andy/Desktop/实习/Web/scripts/import_rto_seed.sh.example
 ```
 
 ## 5. 你现在最需要的 Flux 查询
@@ -221,4 +275,3 @@ from(bucket: "rto_mock_dev")
   |> filter(fn: (r) => r._field == "value")
   |> aggregateWindow(every: 30m, fn: mean, createEmpty: false)
 ```
-
